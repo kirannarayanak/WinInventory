@@ -13,59 +13,82 @@ public class InventoryService
     public MachineInfo GetMachineInfo()
     {
         var mi = new MachineInfo();
- 
-        using (var csSearcher = new ManagementObjectSearcher("SELECT Name, Manufacturer, Model, TotalPhysicalMemory FROM Win32_ComputerSystem"))
+
+        // Check if we're on Windows - WMI only works on Windows
+        if (!OperatingSystem.IsWindows())
         {
-            var cs = csSearcher.Get().Cast<ManagementObject>().FirstOrDefault();
-            if (cs != null)
-            {
-                mi.ComputerName = cs["Name"]?.ToString() ?? "";
-                mi.Manufacturer = cs["Manufacturer"]?.ToString() ?? "";
-                mi.Model        = cs["Model"]?.ToString() ?? "";
-                var totalMemBytes = ConvertToUInt64(cs["TotalPhysicalMemory"]);
-                mi.TotalMemoryGB  = $"{BytesToGB(totalMemBytes):0.##} GB";
-            }
+            // Return empty/default values for Linux/other platforms
+            mi.ComputerName = "N/A (Linux/Non-Windows)";
+            mi.OSName = "Linux/Non-Windows";
+            mi.OSVersion = Environment.OSVersion.VersionString;
+            return mi;
         }
- 
-        using (var osSearcher = new ManagementObjectSearcher("SELECT Caption, Version, BuildNumber FROM Win32_OperatingSystem"))
+
+        try
         {
-            var os = osSearcher.Get().Cast<ManagementObject>().FirstOrDefault();
-            if (os != null)
+            using (var csSearcher = new ManagementObjectSearcher("SELECT Name, Manufacturer, Model, TotalPhysicalMemory FROM Win32_ComputerSystem"))
             {
-                mi.OSName      = os["Caption"]?.ToString() ?? "";
-                mi.OSVersion   = os["Version"]?.ToString() ?? "";
-                mi.BuildNumber = os["BuildNumber"]?.ToString() ?? "";
-            }
-        }
- 
-        using (var cpuSearcher = new ManagementObjectSearcher("SELECT Name, NumberOfCores, NumberOfLogicalProcessors FROM Win32_Processor"))
-        {
-            var cpu = cpuSearcher.Get().Cast<ManagementObject>().FirstOrDefault();
-            if (cpu != null)
-            {
-                mi.Processor     = cpu["Name"]?.ToString() ?? "";
-                mi.PhysicalCores = ConvertToInt(cpu["NumberOfCores"]);
-                mi.LogicalCores  = ConvertToInt(cpu["NumberOfLogicalProcessors"]);
-            }
-        }
- 
-        using (var diskSearcher = new ManagementObjectSearcher("SELECT Name, FileSystem, Size, FreeSpace FROM Win32_LogicalDisk WHERE DriveType=3"))
-        {
-            foreach (var d in diskSearcher.Get().Cast<ManagementObject>())
-            {
-                var sizeBytes = ConvertToUInt64(d["Size"]);
-                var freeBytes = ConvertToUInt64(d["FreeSpace"]);
- 
-                mi.Disks.Add(new DiskInfo
+                var cs = csSearcher.Get().Cast<ManagementObject>().FirstOrDefault();
+                if (cs != null)
                 {
-                    Name       = d["Name"]?.ToString() ?? "",
-                    FileSystem = d["FileSystem"]?.ToString() ?? "",
-                    SizeGB     = $"{BytesToGB(sizeBytes):0.##} GB",
-                    FreeGB     = $"{BytesToGB(freeBytes):0.##} GB"
-                });
+                    mi.ComputerName = cs["Name"]?.ToString() ?? "";
+                    mi.Manufacturer = cs["Manufacturer"]?.ToString() ?? "";
+                    mi.Model        = cs["Model"]?.ToString() ?? "";
+                    var totalMemBytes = ConvertToUInt64(cs["TotalPhysicalMemory"]);
+                    mi.TotalMemoryGB  = $"{BytesToGB(totalMemBytes):0.##} GB";
+                }
+            }
+
+            using (var osSearcher = new ManagementObjectSearcher("SELECT Caption, Version, BuildNumber FROM Win32_OperatingSystem"))
+            {
+                var os = osSearcher.Get().Cast<ManagementObject>().FirstOrDefault();
+                if (os != null)
+                {
+                    mi.OSName      = os["Caption"]?.ToString() ?? "";
+                    mi.OSVersion   = os["Version"]?.ToString() ?? "";
+                    mi.BuildNumber = os["BuildNumber"]?.ToString() ?? "";
+                }
+            }
+
+            using (var cpuSearcher = new ManagementObjectSearcher("SELECT Name, NumberOfCores, NumberOfLogicalProcessors FROM Win32_Processor"))
+            {
+                var cpu = cpuSearcher.Get().Cast<ManagementObject>().FirstOrDefault();
+                if (cpu != null)
+                {
+                    mi.Processor     = cpu["Name"]?.ToString() ?? "";
+                    mi.PhysicalCores = ConvertToInt(cpu["NumberOfCores"]);
+                    mi.LogicalCores  = ConvertToInt(cpu["NumberOfLogicalProcessors"]);
+                }
+            }
+
+            using (var diskSearcher = new ManagementObjectSearcher("SELECT Name, FileSystem, Size, FreeSpace FROM Win32_LogicalDisk WHERE DriveType=3"))
+            {
+                foreach (var d in diskSearcher.Get().Cast<ManagementObject>())
+                {
+                    var sizeBytes = ConvertToUInt64(d["Size"]);
+                    var freeBytes = ConvertToUInt64(d["FreeSpace"]);
+
+                    mi.Disks.Add(new DiskInfo
+                    {
+                        Name       = d["Name"]?.ToString() ?? "",
+                        FileSystem = d["FileSystem"]?.ToString() ?? "",
+                        SizeGB     = $"{BytesToGB(sizeBytes):0.##} GB",
+                        FreeGB     = $"{BytesToGB(freeBytes):0.##} GB"
+                    });
+                }
             }
         }
- 
+        catch (PlatformNotSupportedException)
+        {
+            // WMI not supported on this platform
+            mi.ComputerName = "N/A (WMI not supported)";
+            mi.OSName = Environment.OSVersion.VersionString;
+        }
+        catch (Exception)
+        {
+            // Any other error - return what we have
+        }
+
         return mi;
     }
  
@@ -73,11 +96,30 @@ public class InventoryService
     public List<InstalledApp> GetInstalledApplications()
     {
         var results = new List<InstalledApp>();
-        ReadUninstallHive(RegistryHive.LocalMachine, RegistryView.Registry64, "x64", "Machine", results);
-        ReadUninstallHive(RegistryHive.LocalMachine, RegistryView.Registry32, "x86", "Machine", results);
-        ReadUninstallHive(RegistryHive.CurrentUser,  RegistryView.Registry64, "x64", "User",   results);
-        ReadUninstallHive(RegistryHive.CurrentUser,  RegistryView.Registry32, "x86", "User",   results);
- 
+
+        // Registry only works on Windows
+        if (!OperatingSystem.IsWindows())
+        {
+            return results; // Return empty list on Linux
+        }
+
+        try
+        {
+            ReadUninstallHive(RegistryHive.LocalMachine, RegistryView.Registry64, "x64", "Machine", results);
+            ReadUninstallHive(RegistryHive.LocalMachine, RegistryView.Registry32, "x86", "Machine", results);
+            ReadUninstallHive(RegistryHive.CurrentUser,  RegistryView.Registry64, "x64", "User",   results);
+            ReadUninstallHive(RegistryHive.CurrentUser,  RegistryView.Registry32, "x86", "User",   results);
+        }
+        catch (PlatformNotSupportedException)
+        {
+            // Registry not supported on this platform
+            return results;
+        }
+        catch (Exception)
+        {
+            // Any other error - return what we have
+        }
+
         return results
             .Where(a => !string.IsNullOrWhiteSpace(a.Name))
             .GroupBy(a => $"{a.Name}|{a.Version}|{a.Scope}|{a.Architecture}")
