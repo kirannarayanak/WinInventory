@@ -108,15 +108,19 @@ builder.Services.AddSingleton<CarbonFootprintService>();
 builder.Services.AddSingleton<EnhancedRecommendationService>();
 
 builder.Services.AddSingleton<UserDataService>();
+
+// Configure forwarded headers for HTTPS detection (needed for cloud deployments like Render)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
  
 var app = builder.Build();
 
-// Configure forwarded headers for HTTPS detection (needed for cloud deployments like Render)
-app.UseForwardedHeaders(new Microsoft.AspNetCore.HttpOverrides.ForwardedHeadersOptions
-{
-    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
-                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
-});
+// Use forwarded headers middleware
+app.UseForwardedHeaders();
 
 // Check if OAuth is properly configured (only require auth if real credentials are set)
 bool IsOAuthConfigured()
