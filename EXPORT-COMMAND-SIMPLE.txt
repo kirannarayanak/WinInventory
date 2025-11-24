@@ -1,0 +1,37 @@
+═══════════════════════════════════════════════════════════════
+  COPY AND PASTE THIS COMMAND TO EXPORT YOUR MACHINE DATA
+═══════════════════════════════════════════════════════════════
+
+powershell -ExecutionPolicy Bypass -Command "$d=[Environment]::GetFolderPath('Desktop');$t=Get-Date -Format 'yyyy-MM-dd_HH-mm-ss';$f=Join-Path $d \"machine-data_$t.csv\";$cs=Get-WmiObject Win32_ComputerSystem;$os=Get-WmiObject Win32_OperatingSystem;$cpu=Get-WmiObject Win32_Processor|Select-Object -First 1;$m=[math]::Round($cs.TotalPhysicalMemory/1GB,2);$disks=(Get-WmiObject Win32_LogicalDisk -Filter 'DriveType=3'|ForEach-Object{\"$($_.DeviceID) $($_.FileSystem) $([math]::Round($_.Size/1GB,2))GB $([math]::Round($_.FreeSpace/1GB,2))GB\"})-join';';$apps=@();@('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*','HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*')|ForEach-Object{Get-ItemProperty $_ -ErrorAction SilentlyContinue|Where-Object{$_.DisplayName -and !$_.SystemComponent -and !$_.ReleaseType}|ForEach-Object{$apps+=$_.DisplayName}};$apps=($apps|Sort-Object -Unique)-join';';$csv=\"ComputerName,Manufacturer,Model,OSName,OSVersion,BuildNumber,Processor,PhysicalCores,LogicalCores,TotalMemoryGB,Disks,Applications`r`n\";$csv+=\"`\"$($cs.Name)`\",`\"$($cs.Manufacturer)`\",`\"$($cs.Model)`\",`\"$($os.Caption)`\",`\"$($os.Version)`\",`\"$($os.BuildNumber)`\",`\"$($cpu.Name)`\",$($cpu.NumberOfCores),$($cpu.NumberOfLogicalProcessors),$m,`\"$disks`\",`\"$apps`"\";$csv|Out-File $f -Encoding UTF8 -NoNewline;Write-Host \"`n==========================================\" -ForegroundColor Green;Write-Host \"SUCCESS! File saved to your Desktop\" -ForegroundColor Green;Write-Host \"==========================================\" -ForegroundColor Green;Write-Host \"File: machine-data_$t.csv\" -ForegroundColor Cyan;Write-Host \"Computer: $($cs.Name)\" -ForegroundColor White;Write-Host \"Applications found: $($apps.Split(';').Count)\" -ForegroundColor White;Write-Host \"`nNext steps:\" -ForegroundColor Yellow;Write-Host \"1. Go to http://localhost:7000\" -ForegroundColor White;Write-Host \"2. Click 'Import Data' button\" -ForegroundColor White;Write-Host \"3. Select this CSV file from your Desktop\" -ForegroundColor White;Write-Host \"4. Get Mac recommendations!\" -ForegroundColor White"
+
+═══════════════════════════════════════════════════════════════
+  HOW TO USE:
+═══════════════════════════════════════════════════════════════
+
+1. Copy the entire command above (the long line starting with "powershell")
+2. Open Command Prompt (CMD) or PowerShell
+3. Right-click in the window and paste (or press Ctrl+V)
+4. Press Enter
+5. Wait a few seconds - you'll see "SUCCESS!" message
+6. Check your Desktop - you'll find a file named: machine-data_YYYY-MM-DD_HH-MM-SS.csv
+7. Go to http://localhost:7000 in your browser
+8. Click "Import Data" button
+9. Select the CSV file from your Desktop
+10. Get Mac recommendations!
+
+═══════════════════════════════════════════════════════════════
+  WHAT IT COLLECTS:
+═══════════════════════════════════════════════════════════════
+
+✓ Computer Name
+✓ Manufacturer & Model
+✓ Operating System (Windows version)
+✓ Processor (CPU)
+✓ RAM (Memory)
+✓ Disk Drives (size and free space)
+✓ All Installed Applications
+
+All data is saved locally - nothing is sent anywhere!
+
+═══════════════════════════════════════════════════════════════
+

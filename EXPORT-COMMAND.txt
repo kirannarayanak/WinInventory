@@ -1,0 +1,30 @@
+═══════════════════════════════════════════════════════════════
+  COPY AND PASTE THIS COMMAND TO EXPORT MACHINE DATA
+═══════════════════════════════════════════════════════════════
+
+powershell -Command "$d=[Environment]::GetFolderPath('Desktop');$t=Get-Date -Format 'yyyy-MM-dd_HH-mm-ss';$f=Join-Path $d \"machine-data_$t.csv\";$cs=Get-WmiObject Win32_ComputerSystem;$os=Get-WmiObject Win32_OperatingSystem;$cpu=Get-WmiObject Win32_Processor|Select-Object -First 1;$m=[math]::Round($cs.TotalPhysicalMemory/1GB,2);$disks=(Get-WmiObject Win32_LogicalDisk -Filter 'DriveType=3'|ForEach-Object{\"$($_.DeviceID) $($_.FileSystem) $([math]::Round($_.Size/1GB,2))GB $([math]::Round($_.FreeSpace/1GB,2))GB\"})-join';';$apps=@();@('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*','HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*')|ForEach-Object{Get-ItemProperty $_ -ErrorAction SilentlyContinue|Where-Object{$_.DisplayName -and !$_.SystemComponent -and !$_.ReleaseType}|ForEach-Object{$apps+=$_.DisplayName}};$apps=($apps|Sort-Object -Unique)-join';';$csv=\"ComputerName,Manufacturer,Model,OSName,OSVersion,BuildNumber,Processor,PhysicalCores,LogicalCores,TotalMemoryGB,Disks,Applications`r`n\";$csv+=\"`\"$($cs.Name)`\",`\"$($cs.Manufacturer)`\",`\"$($cs.Model)`\",`\"$($os.Caption)`\",`\"$($os.Version)`\",`\"$($os.BuildNumber)`\",`\"$($cpu.Name)`\",$($cpu.NumberOfCores),$($cpu.NumberOfLogicalProcessors),$m,`\"$disks`\",`\"$apps`"\";$csv|Out-File $f -Encoding UTF8 -NoNewline;Write-Host \"File saved to: $f\" -ForegroundColor Green;Write-Host \"Computer: $($cs.Name)\" -ForegroundColor Cyan;Write-Host \"Applications: $($apps.Split(';').Count) found\" -ForegroundColor Cyan"
+
+═══════════════════════════════════════════════════════════════
+  WHAT IT DOES:
+═══════════════════════════════════════════════════════════════
+
+1. Collects all machine details (CPU, RAM, OS, Disks)
+2. Collects all installed applications
+3. Saves to Desktop as: machine-data_YYYY-MM-DD_HH-MM-SS.csv
+4. Shows summary when done
+
+═══════════════════════════════════════════════════════════════
+  HOW TO USE:
+═══════════════════════════════════════════════════════════════
+
+1. Copy the command above
+2. Open PowerShell or Command Prompt
+3. Paste and press Enter
+4. File will be saved to your Desktop
+5. Open WinInventory app (http://localhost:7000)
+6. Click "Import Data" button
+7. Select the CSV file from Desktop
+8. Get Mac recommendations!
+
+═══════════════════════════════════════════════════════════════
+

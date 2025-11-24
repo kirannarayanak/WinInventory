@@ -1,0 +1,926 @@
+/* Apple-Inspired Elegant Design with Dark Mode */
+:root {
+    --apple-gray-1: #f5f5f7;
+    --apple-gray-2: #e8e8ed;
+    --apple-gray-3: #86868b;
+    --apple-gray-4: #1d1d1f;
+    --apple-blue: #0071e3;
+    --apple-blue-hover: #0077ed;
+    --apple-green: #30d158;
+    --apple-gradient: linear-gradient(180deg, #f5f5f7 0%, #ffffff 100%);
+    
+    /* Light mode (default) */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --bg-tertiary: #e8e8ed;
+    --text-primary: #1d1d1f;
+    --text-secondary: #86868b;
+    --border-color: #e8e8ed;
+    --card-bg: #ffffff;
+    --modal-bg: #ffffff;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --shadow-hover: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] {
+    --bg-primary: #1d1d1f;
+    --bg-secondary: #2d2d2f;
+    --bg-tertiary: #3d3d3f;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --border-color: #3d3d3f;
+    --card-bg: #2d2d2f;
+    --modal-bg: #2d2d2f;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-hover: rgba(0, 0, 0, 0.5);
+    --apple-gray-1: #2d2d2f;
+    --apple-gray-2: #3d3d3f;
+    --apple-gray-3: #a1a1a6;
+    --apple-gray-4: #f5f5f7;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Elegant Header */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+/* Card Styling - Apple Style */
+.card {
+    border: none;
+    border-radius: 18px;
+    background: var(--card-bg);
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    color: var(--text-primary);
+}
+
+.card:hover {
+    box-shadow: 0 8px 24px var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    transition: color 0.3s ease;
+}
+
+/* Ensure all text in cards is visible */
+.card-body {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.card-body .row {
+    color: var(--text-primary);
+}
+
+.card-body .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+.card-body .fw-semibold {
+    color: var(--text-primary) !important;
+}
+
+/* Button Styling - Apple Style */
+.btn {
+    border-radius: 980px;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    transition: all 0.2s ease;
+    letter-spacing: -0.01em;
+    border: none;
+}
+
+.btn-primary {
+    background: var(--apple-blue);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--apple-blue-hover);
+    transform: scale(1.02);
+}
+
+.btn-outline-secondary {
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    transition: all 0.2s ease;
+}
+
+.btn-outline-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+}
+
+/* Modal Styling - Premium Feel */
+.modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px var(--shadow-hover);
+    overflow: hidden;
+    background: var(--modal-bg);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.modal-header {
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.5rem;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.modal-body {
+    padding: 2rem;
+    background: var(--modal-bg);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Badge Styling */
+.badge {
+    border-radius: 12px;
+    padding: 0.4rem 0.8rem;
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: -0.01em;
+}
+
+.bg-primary-subtle {
+    background: rgba(0, 113, 227, 0.1);
+    color: var(--apple-blue);
+}
+
+.bg-secondary-subtle {
+    background: var(--apple-gray-1);
+    color: var(--apple-gray-4);
+}
+
+/* TCO Comparison Cards */
+.tco-card {
+    border-radius: 16px;
+    padding: 1.5rem;
+    background: var(--apple-gray-1);
+    border: 1px solid var(--apple-gray-2);
+    transition: all 0.3s ease;
+}
+
+.tco-card.mac-card {
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.05) 0%, rgba(0, 113, 227, 0.02) 100%);
+    border-color: rgba(0, 113, 227, 0.2);
+}
+
+.tco-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Savings Highlight */
+.savings-highlight {
+    background: linear-gradient(135deg, var(--apple-green) 0%, #28cd41 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    text-align: center;
+    margin-top: 1.5rem;
+    box-shadow: 0 4px 16px rgba(48, 209, 88, 0.3);
+}
+
+.savings-highlight h3 {
+    color: white;
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.savings-highlight .savings-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+
+/* Advantages List */
+.advantages-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.advantages-list li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    color: var(--apple-gray-4);
+    font-size: 0.95rem;
+}
+
+.advantages-list li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--apple-green);
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+/* Recommendations */
+.recommendations {
+    background: rgba(0, 113, 227, 0.05);
+    border-left: 4px solid var(--apple-blue);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+}
+
+.recommendations h6 {
+    color: var(--apple-blue);
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.recommendations ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.recommendations li {
+    color: var(--apple-gray-4);
+    margin: 0.5rem 0;
+}
+
+/* Similarity Score */
+.similarity-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--apple-blue) 0%, #0051d5 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+}
+
+/* Spec Display */
+.spec-display {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+
+.spec-item {
+    background: var(--bg-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Tab Styling */
+.nav-tabs {
+    border-bottom: 2px solid var(--border-color);
+    transition: border-color 0.3s ease;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+    background: transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--apple-blue);
+    border-bottom-color: var(--apple-blue);
+    background: transparent;
+}
+
+/* Table Styling */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.table thead th {
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 1rem;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.table tbody {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.table tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    background: var(--card-bg);
+    transition: border-color 0.3s ease, color 0.3s ease, background-color 0.3s ease;
+}
+
+.table tbody tr {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.table tbody tr:hover {
+    background: var(--bg-secondary);
+    transition: background-color 0.3s ease;
+}
+
+.table tbody tr:hover td {
+    background: var(--bg-secondary);
+}
+
+/* Input Styling */
+.form-control {
+    border-radius: 12px;
+    border: 1px solid var(--apple-gray-2);
+    padding: 0.6rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--apple-blue);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Theme Toggle Button */
+#themeToggle {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    transition: all 0.3s ease;
+}
+
+#themeToggle:hover {
+    background: var(--bg-secondary);
+    transform: scale(1.1);
+    border-color: var(--text-secondary);
+}
+
+/* Navbar Styling */
+.navbar {
+    background: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.navbar-brand {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.nav-link {
+    color: var(--text-primary) !important;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--apple-blue) !important;
+}
+
+.navbar-toggler {
+    border-color: var(--border-color);
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(29, 29, 31, 0.75)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+[data-theme="dark"] .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(245, 245, 247, 0.75)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.theme-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+#themeToggle:hover .theme-icon {
+    transform: rotate(15deg);
+}
+
+/* Dark mode specific adjustments */
+/* Additional dark mode overrides */
+[data-theme="dark"] .container {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .tab-content {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .alert {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .alert-light {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .badge {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* Bootstrap badge colors in dark mode */
+[data-theme="dark"] .badge.bg-success {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #1d1d1f !important;
+}
+
+[data-theme="dark"] .badge.bg-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .badge.bg-info {
+    background-color: #17a2b8 !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .badge.bg-primary {
+    background-color: var(--apple-blue) !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .badge.bg-secondary {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .btn-secondary {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background-color: var(--border-color);
+    border-color: var(--text-secondary);
+}
+
+/* Fix Bootstrap table classes for dark mode */
+[data-theme="dark"] .table {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table thead th {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table tbody {
+    background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .table tbody td {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table tbody tr {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover td {
+    background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(even) {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table-bordered {
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table-bordered th,
+[data-theme="dark"] .table-bordered td {
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table-sm th,
+[data-theme="dark"] .table-sm td {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Ensure all text in cards is visible in dark mode */
+[data-theme="dark"] .card .row div {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .card .col-5,
+[data-theme="dark"] .card .col-7 {
+    color: var(--text-primary) !important;
+}
+
+/* Card headers in dark mode */
+[data-theme="dark"] .card-header {
+    background-color: var(--bg-secondary) !important;
+    border-bottom-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .card-header.bg-primary,
+[data-theme="dark"] .card-header.bg-info,
+[data-theme="dark"] .card-header.bg-warning,
+[data-theme="dark"] .card-header.bg-success {
+    color: white !important;
+}
+
+[data-theme="dark"] .card-header.bg-primary {
+    background-color: var(--apple-blue) !important;
+}
+
+[data-theme="dark"] .card-header.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+[data-theme="dark"] .card-header.bg-warning {
+    background-color: #ffc107 !important;
+    color: #1d1d1f !important;
+}
+
+[data-theme="dark"] .card-header.bg-success {
+    background-color: #28a745 !important;
+}
+
+/* Modal content in dark mode */
+[data-theme="dark"] .modal-content {
+    background-color: var(--modal-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .modal-header {
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%) !important;
+    border-bottom-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .modal-title {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .modal-footer {
+    background-color: var(--bg-primary) !important;
+    border-top-color: var(--border-color) !important;
+}
+
+/* Text colors in dark mode */
+[data-theme="dark"] .text-dark {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .text-black {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .text-success {
+    color: #28a745 !important;
+}
+
+[data-theme="dark"] .text-danger {
+    color: #dc3545 !important;
+}
+
+[data-theme="dark"] .text-warning {
+    color: #ffc107 !important;
+}
+
+[data-theme="dark"] .text-info {
+    color: #17a2b8 !important;
+}
+
+[data-theme="dark"] .text-primary {
+    color: var(--apple-blue) !important;
+}
+
+/* Small text in dark mode */
+[data-theme="dark"] .small {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .small.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* H5, H6 headings in dark mode */
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] h5.fw-bold,
+[data-theme="dark"] h6.fw-semibold {
+    color: var(--text-primary) !important;
+}
+
+/* Chart.js dark mode - ensure canvas is visible */
+[data-theme="dark"] canvas {
+    background-color: var(--card-bg) !important;
+}
+
+/* HR/Divider lines in dark mode */
+[data-theme="dark"] hr {
+    border-color: var(--border-color) !important;
+    opacity: 0.5;
+}
+
+/* Card borders in dark mode */
+[data-theme="dark"] .card.border-primary {
+    border-color: var(--apple-blue) !important;
+}
+
+[data-theme="dark"] .card.border-info {
+    border-color: #17a2b8 !important;
+}
+
+[data-theme="dark"] .card.border-warning {
+    border-color: #ffc107 !important;
+}
+
+/* Row and column text in dark mode */
+[data-theme="dark"] .row {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .row > div {
+    color: var(--text-primary);
+}
+
+/* Fw-semibold and fw-bold in dark mode */
+[data-theme="dark"] .fw-semibold,
+[data-theme="dark"] .fw-bold {
+    color: var(--text-primary) !important;
+}
+
+/* H1-H6 in dark mode */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+    color: var(--text-primary) !important;
+}
+
+/* Paragraphs in dark mode */
+[data-theme="dark"] p {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] p.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* List items in dark mode */
+[data-theme="dark"] li {
+    color: var(--text-primary);
+}
+
+/* Div elements in dark mode */
+[data-theme="dark"] div {
+    color: var(--text-primary);
+}
+
+/* Span elements in dark mode */
+[data-theme="dark"] span {
+    color: inherit;
+}
+
+/* Ensure all text in overview cards is visible */
+[data-theme="dark"] .card .row .col-5.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .card .row .col-7.fw-semibold {
+    color: var(--text-primary) !important;
+}
+
+/* H5 elements in dark mode */
+[data-theme="dark"] .h5 {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .h5.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .h5.text-success {
+    color: #28a745 !important;
+}
+
+[data-theme="dark"] .h5.text-primary {
+    color: var(--apple-blue) !important;
+}
+
+[data-theme="dark"] .h5.text-danger {
+    color: #dc3545 !important;
+}
+
+/* Small text in cards */
+[data-theme="dark"] small {
+    color: var(--text-secondary) !important;
+}
+
+/* Button text in dark mode */
+[data-theme="dark"] .btn {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-primary {
+    background-color: var(--apple-blue);
+    color: white;
+    border-color: var(--apple-blue);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background-color: var(--apple-blue-hover);
+    border-color: var(--apple-blue-hover);
+}
+
+/* Ensure all divs with text are visible */
+[data-theme="dark"] div:not(.btn):not(.badge):not(.alert) {
+    color: var(--text-primary);
+}
+
+/* TCO cards specific */
+[data-theme="dark"] .tco-card {
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .tco-card.mac-card {
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.1) 0%, rgba(0, 113, 227, 0.05) 100%) !important;
+    border-color: rgba(0, 113, 227, 0.3) !important;
+}
+
+/* Savings highlight in dark mode */
+[data-theme="dark"] .savings-highlight {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+}
+
+/* Recommendations section */
+[data-theme="dark"] .recommendations {
+    background: rgba(0, 113, 227, 0.1) !important;
+    border-left-color: var(--apple-blue) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .recommendations h6 {
+    color: var(--apple-blue) !important;
+}
+
+[data-theme="dark"] .recommendations li {
+    color: var(--text-primary) !important;
+}
+
+/* Background opacity circles in dark mode */
+[data-theme="dark"] .bg-primary.bg-opacity-10 {
+    background-color: rgba(0, 113, 227, 0.2) !important;
+}
+
+[data-theme="dark"] .bg-success.bg-opacity-10 {
+    background-color: rgba(40, 167, 69, 0.2) !important;
+}
+
+/* Border colors in dark mode */
+[data-theme="dark"] .border {
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .border-start {
+    border-left-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .border-danger {
+    border-color: #dc3545 !important;
+}
+
+[data-theme="dark"] .border-success {
+    border-color: #28a745 !important;
+}
+
+/* Shadow adjustments for dark mode */
+[data-theme="dark"] .shadow-sm {
+    box-shadow: 0 2px 8px var(--shadow) !important;
+}
+
+[data-theme="dark"] .shadow {
+    box-shadow: 0 4px 16px var(--shadow) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .savings-highlight .savings-amount {
+        font-size: 2rem;
+    }
+}
+

@@ -1,0 +1,36 @@
+═══════════════════════════════════════════════════════════════
+  SIMPLE COMMAND FOR USERS - COPY AND PASTE THIS
+═══════════════════════════════════════════════════════════════
+
+powershell -ExecutionPolicy Bypass -File "%~dp0export-to-desktop.ps1"
+
+═══════════════════════════════════════════════════════════════
+  OR USE THIS ONE-LINER (if script file is in same folder):
+═══════════════════════════════════════════════════════════════
+
+cd "C:\Users\HP\Downloads\WinInventory-20251119T105049Z-1-001\WinInventory" && powershell -ExecutionPolicy Bypass -File ".\export-to-desktop.ps1"
+
+═══════════════════════════════════════════════════════════════
+  BEST OPTION: Use the batch file (double-click)
+═══════════════════════════════════════════════════════════════
+
+Just double-click: export-to-desktop.bat
+
+═══════════════════════════════════════════════════════════════
+  ALTERNATIVE: Standalone one-liner (no file needed)
+═══════════════════════════════════════════════════════════════
+
+powershell -ExecutionPolicy Bypass -Command "$d=[Environment]::GetFolderPath('Desktop');$t=Get-Date -Format 'yyyy-MM-dd_HH-mm-ss';$f=Join-Path $d \"machine-data_$t.csv\";$cs=Get-WmiObject Win32_ComputerSystem;$os=Get-WmiObject Win32_OperatingSystem;$cpu=Get-WmiObject Win32_Processor|Select-Object -First 1;$m=[math]::Round($cs.TotalPhysicalMemory/1GB,2);$disks=(Get-WmiObject Win32_LogicalDisk -Filter 'DriveType=3'|ForEach-Object{$d=$_.DeviceID;$fs=$_.FileSystem;$sz=[math]::Round($_.Size/1GB,2);$fr=[math]::Round($_.FreeSpace/1GB,2);\"$d $fs ${sz}GB ${fr}GB\"})-join';';$apps=@();$keys=@('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*','HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*');foreach($k in $keys){try{$items=Get-ItemProperty $k -ErrorAction SilentlyContinue;foreach($item in $items){if($item.DisplayName -and !$item.SystemComponent -and !$item.ReleaseType){$apps+=$item.DisplayName}}}catch{}};$apps=$apps|Sort-Object -Unique;$appsList=$apps -join';';$csv='ComputerName,Manufacturer,Model,OSName,OSVersion,BuildNumber,Processor,PhysicalCores,LogicalCores,TotalMemoryGB,Disks,Applications'+"`r`n";$csv+="\"$($cs.Name)\",\"$($cs.Manufacturer)\",\"$($cs.Model)\",\"$($os.Caption)\",\"$($os.Version)\",\"$($os.BuildNumber)\",\"$($cpu.Name)\",$($cpu.NumberOfCores),$($cpu.NumberOfLogicalProcessors),$m,\"$disks\",\"$appsList\"";$csv|Out-File $f -Encoding UTF8 -NoNewline;Write-Host \"`n==========================================\" -ForegroundColor Green;Write-Host \"SUCCESS! File saved to your Desktop\" -ForegroundColor Green;Write-Host \"==========================================\" -ForegroundColor Green;Write-Host \"File: machine-data_$t.csv\" -ForegroundColor Cyan;Write-Host \"Computer: $($cs.Name)\" -ForegroundColor White;Write-Host \"Applications found: $($apps.Count)\" -ForegroundColor White;Write-Host \"`nNext steps:\" -ForegroundColor Yellow;Write-Host \"1. Go to http://localhost:7000\" -ForegroundColor White;Write-Host \"2. Click Import Data button\" -ForegroundColor White;Write-Host \"3. Select this CSV file from your Desktop\" -ForegroundColor White;Write-Host \"4. Get Mac recommendations!\" -ForegroundColor White"
+
+═══════════════════════════════════════════════════════════════
+  INSTRUCTIONS:
+═══════════════════════════════════════════════════════════════
+
+RECOMMENDED: Use the batch file (easiest)
+- Just double-click: export-to-desktop.bat
+- File will be saved to Desktop automatically
+
+OR: Copy one of the commands above and paste in CMD/PowerShell
+
+═══════════════════════════════════════════════════════════════
+

@@ -1,0 +1,27 @@
+{
+  "region": "UAE",
+  "power_cost_aed_per_kwh": 0.30,
+  "work_hours_per_day": 8,
+  "workdays_per_year": 240,
+ 
+  "windows_avg_watts": 35,
+  "mac_avg_watts": 15,
+ 
+  "windows_licensing_aed": 0,
+  "security_suite_aed_per_year": 250,
+  "mdm_cost_aed_per_year": 0,
+ 
+  "helpdesk_hours_per_year": 3,
+  "helpdesk_cost_aed_per_hour": 120,
+ 
+  "mac_resale_value_pct": 0.50,
+  "pc_resale_value_pct": 0.15,
+ 
+  "mac_productivity_gain_pct": 0.06,
+  "mac_minutes_saved_per_day": 10,
+  "mac_helpdesk_reduction_pct": 0.40,
+  "windows_downtime_hours_per_year": 8,
+  "mac_downtime_hours_per_year": 2,
+  "hourly_productivity_value_aed": 50,
+  "mac_security_advantage_pct": 0.30
+}

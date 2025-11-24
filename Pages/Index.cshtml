@@ -1,0 +1,1034 @@
+﻿@page
+@model WinInventory.Pages.IndexModel
+@{
+    ViewData["Title"] = "Windows Inventory";
+}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="~/css/apple-style.css"/>
+<script>
+// Set theme immediately before page renders to prevent flash
+(function() {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+})();
+</script>
+
+<div class="container py-4">
+<div class="d-flex align-items-center justify-content-between mb-3">
+<h1 class="mb-0">Windows Inventory</h1>
+<div class="d-flex gap-2 align-items-center">
+<button id="btnExportData" class="btn btn-outline-secondary" title="Export machine data for Mac recommendation">Export Data</button>
+<input type="file" id="fileImport" accept=".csv,.txt" style="display: none;">
+<button id="btnImportData" class="btn btn-outline-secondary" title="Import machine data and get Mac recommendation" style="display: none;">Import Data</button>
+<a class="btn btn-outline-secondary" href="/api/machineinfo" target="_blank">View JSON</a>
+<button id="btnSuggestedMac" class="btn btn-primary" style="display: none;">Suggested Mac</button>
+<div id="authSection" class="d-flex gap-2 align-items-center ms-3">
+    <span id="userInfo" class="text-muted small me-2" style="display: none;"></span>
+    <a id="btnLogin" href="/Login" class="btn btn-outline-primary btn-sm">Sign In</a>
+    <a id="btnLogout" href="/Logout" class="btn btn-outline-secondary btn-sm" style="display: none;">Sign Out</a>
+</div>
+</div>
+</div>
+ 
+  <div class="border rounded p-3 bg-white">
+<!-- Overview -->
+<div id="overview">
+<p class="text-muted mb-3">Basic system details gathered locally via WMI/Registry.</p>
+ 
+      <div class="row g-4">
+<div class="col-lg-6">
+<div class="card shadow-sm">
+<div class="card-body">
+<h5 class="card-title">Device</h5>
+<div class="row"><div class="col-5 text-muted">Computer Name</div><div class="col-7 fw-semibold">@Model.Info.ComputerName</div></div>
+<div class="row"><div class="col-5 text-muted">Manufacturer</div><div class="col-7 fw-semibold">@Model.Info.Manufacturer</div></div>
+<div class="row"><div class="col-5 text-muted">Model</div><div class="col-7 fw-semibold">@Model.Info.Model</div></div>
+<div class="row"><div class="col-5 text-muted">Memory</div><div class="col-7 fw-semibold">@Model.Info.TotalMemoryGB</div></div>
+</div>
+</div>
+</div>
+ 
+        <div class="col-lg-6">
+<div class="card shadow-sm">
+<div class="card-body">
+<h5 class="card-title">Operating System</h5>
+<div class="row"><div class="col-5 text-muted">OS</div><div class="col-7 fw-semibold">@Model.Info.OSName</div></div>
+<div class="row"><div class="col-5 text-muted">Version</div><div class="col-7 fw-semibold">@Model.Info.OSVersion</div></div>
+<div class="row"><div class="col-5 text-muted">Build</div><div class="col-7 fw-semibold">@Model.Info.BuildNumber</div></div>
+</div>
+</div>
+</div>
+ 
+        <div class="col-lg-6">
+<div class="card shadow-sm">
+<div class="card-body">
+<h5 class="card-title">Processor</h5>
+<div class="row"><div class="col-5 text-muted">CPU</div><div class="col-7 fw-semibold">@Model.Info.Processor</div></div>
+<div class="row"><div class="col-5 text-muted">Cores (Physical)</div><div class="col-7 fw-semibold">@Model.Info.PhysicalCores</div></div>
+<div class="row"><div class="col-5 text-muted">Cores (Logical)</div><div class="col-7 fw-semibold">@Model.Info.LogicalCores</div></div>
+</div>
+</div>
+</div>
+ 
+        <div class="col-lg-6">
+<div class="card shadow-sm">
+<div class="card-body">
+<h5 class="card-title">Disks</h5>
+<div class="table-responsive">
+<table class="table table-sm align-middle">
+<thead><tr><th>Drive</th><th>File System</th><th>Size</th><th>Free</th></tr></thead>
+<tbody>
+                  @foreach (var d in Model.Info.Disks)
+                  {
+<tr><td>@d.Name</td><td>@d.FileSystem</td><td>@d.SizeGB</td><td>@d.FreeGB</td></tr>
+                  }
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+ 
+      </div>
+ 
+      <hr class="my-4"/>
+<div class="d-flex gap-2">
+<button class="btn btn-outline-secondary" onclick="window.print()">Print</button>
+</div>
+</div>
+ 
+</div>
+</div>
+ 
+<!-- Import Command Modal -->
+<div class="modal fade" id="importCommandModal" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Export Machine Data</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+<p class="mb-3">Copy and paste this command into Command Prompt (CMD) or PowerShell:</p>
+<div class="mb-3">
+<textarea id="exportCommand" class="form-control font-monospace" rows="4" readonly style="font-size: 0.85rem; background-color: var(--bg-secondary);"></textarea>
+</div>
+<div class="d-flex gap-2 mb-3">
+<button class="btn btn-primary" onclick="copyExportCommand()">Copy Command</button>
+<button class="btn btn-outline-secondary" onclick="selectExportCommand()">Select All</button>
+</div>
+<div class="alert alert-info mb-0">
+<strong>Steps:</strong><br>
+1. Copy the command above<br>
+2. Open CMD or PowerShell<br>
+3. Paste and press Enter<br>
+4. File will be saved to your Desktop<br>
+5. Click "Choose File" below to upload it
+</div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+<button type="button" class="btn btn-primary" onclick="document.getElementById('fileImport').click(); bootstrap.Modal.getInstance(document.getElementById('importCommandModal')).hide();">Choose File</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Suggested Mac Modal -->
+<div class="modal fade" id="suggestedMacModal" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Mac Recommendation & TCO Analysis</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+      <div class="modal-body">
+<!-- Persona Selector -->
+<div class="mb-3">
+<label class="form-label fw-semibold">Your Role / Workload</label>
+<select id="personaSelect" class="form-select">
+<option value="General">General Use</option>
+<option value="Developer">Developer</option>
+<option value="Designer">Designer</option>
+<option value="OfficeWorker">Office Worker</option>
+<option value="ITAdmin">IT Admin</option>
+<option value="DataAnalyst">Data Analyst</option>
+<option value="Student">Student</option>
+</select>
+<small class="text-muted" id="personaDescription"></small>
+</div>
+
+<div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+<div class="me-auto">
+<div class="btn-group" role="group" aria-label="Term toggle">
+<button type="button" class="btn btn-outline-secondary active" id="tco3">3 years</button>
+<button type="button" class="btn btn-outline-secondary" id="tco5">5 years</button>
+</div>
+</div>
+<div>
+<label for="winPrice" class="form-label mb-1 small">Windows Purchase Price (AED)</label>
+<input type="number" min="0" step="1" class="form-control form-control-sm" id="winPrice" placeholder="e.g. 4500" style="width:160px">
+</div>
+<button id="btnRecalc" class="btn btn-sm btn-primary">Recalculate</button>
+</div>
+
+<!-- Tabs for Enhanced Features -->
+<ul class="nav nav-tabs mb-3" id="recommendationTabs" role="tablist">
+<li class="nav-item" role="presentation">
+<button class="nav-link active" id="overview-tab-modal" data-bs-toggle="tab" data-bs-target="#overview-modal" type="button">Overview</button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link" id="tiers-tab" data-bs-toggle="tab" data-bs-target="#tiers-modal" type="button">Good/Better/Best</button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link" id="compatibility-tab" data-bs-toggle="tab" data-bs-target="#compatibility-modal" type="button">Compatibility</button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link" id="insights-tab" data-bs-toggle="tab" data-bs-target="#insights-modal" type="button">Insights</button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link" id="advantages-tab" data-bs-toggle="tab" data-bs-target="#advantages-modal" type="button">Mac Advantages</button>
+</li>
+</ul>
+
+<div class="tab-content">
+<!-- Overview Tab -->
+<div class="tab-pane fade show active" id="overview-modal" role="tabpanel">
+ 
+        <div id="suggestedMacBody">
+<div class="text-muted">Looking up a match…</div>
+</div>
+</div>
+
+<!-- Good/Better/Best Tiers Tab -->
+<div class="tab-pane fade" id="tiers-modal" role="tabpanel">
+<div id="tiersBody">
+<div class="text-muted">Loading recommendation tiers…</div>
+</div>
+</div>
+
+<!-- Compatibility Tab -->
+<div class="tab-pane fade" id="compatibility-modal" role="tabpanel">
+<div id="compatibilityBody">
+<div class="text-muted">Checking compatibility…</div>
+</div>
+</div>
+
+<!-- Insights Tab -->
+<div class="tab-pane fade" id="insights-modal" role="tabpanel">
+<div id="insightsBody">
+<div class="text-muted">Generating insights…</div>
+</div>
+</div>
+
+<!-- Mac Advantages Tab -->
+<div class="tab-pane fade" id="advantages-modal" role="tabpanel">
+<div id="advantagesBody">
+<div class="text-muted">Loading Mac advantages…</div>
+</div>
+</div>
+</div>
+</div>
+
+      <div class="modal-footer">
+<button type="button" class="btn btn-outline-secondary" id="btnExportPDF" onclick="exportToPDF()">Export PDF</button>
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+ 
+/* ---- Suggested Mac with 3y/5y toggle + Windows price input ---- */
+const btn = document.getElementById('btnSuggestedMac');
+const btnExport = document.getElementById('btnExportData');
+const btnImport = document.getElementById('btnImportData');
+const fileImport = document.getElementById('fileImport');
+const body = document.getElementById('suggestedMacBody');
+const modalElement = document.getElementById('suggestedMacModal');
+const modal = modalElement ? new bootstrap.Modal(modalElement) : null;
+
+const btn3y = document.getElementById('tco3');
+const btn5y = document.getElementById('tco5');
+const winPriceInput = document.getElementById('winPrice');
+const recalcBtn = document.getElementById('btnRecalc');
+const personaSelect = document.getElementById('personaSelect');
+ 
+let currentYears = 3;
+
+// Authentication check
+async function checkAuth() {
+  try {
+    const res = await fetch('/api/machineinfo');
+    // If we can access this endpoint, we're authenticated (or it's public)
+    // For a more accurate check, we could create a dedicated auth endpoint
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function requireAuth() {
+  const res = await fetch('/api/recommend/tco?years=3');
+  if (res.status === 401) {
+    window.location.href = '/Login';
+    return false;
+  }
+  return true;
+}
+
+// Update auth UI on page load
+async function updateAuthUI() {
+  const btnLogin = document.getElementById('btnLogin');
+  const btnLogout = document.getElementById('btnLogout');
+  const userInfo = document.getElementById('userInfo');
+  const authSection = document.getElementById('authSection');
+  const btnSuggestedMac = document.getElementById('btnSuggestedMac');
+  const btnImportData = document.getElementById('btnImportData');
+  
+  try {
+    const testRes = await fetch('/api/auth/check');
+    if (testRes.ok) {
+      const data = await testRes.json();
+      const isAuthenticated = data.authenticated === true;
+      
+      // Hide auth section if not authenticated (OAuth not configured)
+      if (!isAuthenticated) {
+        if (authSection) authSection.style.display = 'none';
+        // Hide Mac suggestion features when not signed in
+        if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
+        if (btnImportData) btnImportData.style.display = 'none';
+        return;
+      }
+      
+      // Show auth section and update buttons
+      if (authSection) authSection.style.display = 'flex';
+      if (btnLogin) btnLogin.style.display = 'none';
+      if (btnLogout) btnLogout.style.display = 'block';
+      if (userInfo) {
+        userInfo.textContent = data.name || data.email || 'Signed in';
+        userInfo.style.display = 'block';
+      }
+      
+      // Show Mac suggestion features when signed in
+      if (btnSuggestedMac) btnSuggestedMac.style.display = 'block';
+      if (btnImportData) btnImportData.style.display = 'block';
+      
+      // Save user and machine data when signed in
+      try {
+        await fetch('/api/user/save-machine-data', { method: 'POST' });
+        console.log('User machine data saved');
+      } catch (e) {
+        console.error('Failed to save machine data:', e);
+      }
+    } else {
+      // If check fails, hide auth section (OAuth not configured)
+      if (authSection) authSection.style.display = 'none';
+      if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
+      if (btnImportData) btnImportData.style.display = 'none';
+    }
+  } catch (e) {
+    // If check fails, hide auth section (OAuth not configured)
+    if (authSection) authSection.style.display = 'none';
+    if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
+    if (btnImportData) btnImportData.style.display = 'none';
+  }
+}
+
+// Run on page load
+updateAuthUI();
+
+// Refresh auth state after logout redirect
+if (document.referrer && document.referrer.includes('/Logout')) {
+  setTimeout(updateAuthUI, 100);
+}
+ 
+function setYears(y){
+  currentYears = y;
+  if (y === 3) { btn3y.classList.add('active'); btn5y.classList.remove('active'); }
+  else { btn5y.classList.add('active'); btn3y.classList.remove('active'); }
+}
+ 
+function fmt(n){ return (typeof n === 'number') ? n.toLocaleString(undefined, { maximumFractionDigits: 0 }) : n; }
+function esc(s){ return (s||'').replace(/[&<>\"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+ 
+async function loadTco() {
+  // Check authentication first
+  if (!await requireAuth()) {
+    return;
+  }
+
+  const price = Number(winPriceInput.value);
+  const qs = new URLSearchParams();
+  qs.set('years', String(currentYears));
+  if (!Number.isNaN(price) && price >= 0 && winPriceInput.value.trim() !== '') qs.set('windowsPrice', String(Math.round(price)));
+  // Add persona to TCO request
+  if (personaSelect && personaSelect.value) qs.set('persona', personaSelect.value);
+
+  body.innerHTML = '<div class="text-muted">Calculating TCO…</div>';
+
+  const res = await fetch('/api/recommend/tco?' + qs.toString());
+  if (!res.ok) {
+    if (res.status === 401) {
+      body.innerHTML = '<div class="alert alert-warning mb-0">Please <a href="/Login">sign in</a> to get Mac recommendations.</div>';
+      return;
+    }
+    const msg = await res.json().catch(()=>({message:'Unknown error'}));
+    body.innerHTML = `<div class="alert alert-warning mb-0">${(msg && msg.message) ? msg.message : 'No match found.'}<br/>Check <code>wwwroot/data/macbooks.csv</code>.</div>`;
+    return;
+  }
+  const r = await res.json();
+ 
+  // Build advantages list
+  const advantagesHtml = (r.macAdvantages || []).map(a => `<li>${esc(a)}</li>`).join('');
+  
+  // Build recommendations list
+  const recommendationsHtml = (r.recommendations || []).map(rec => `<li>${esc(rec)}</li>`).join('');
+
+  body.innerHTML = `
+<div class="fade-in">
+<div class="mb-3 text-center">
+<span class="similarity-badge">${(r.similarity * 100).toFixed(1)}% Match</span>
+<span class="badge bg-secondary-subtle text-secondary border ms-2">${r.mac.years} Year Analysis</span>
+</div>
+
+<div class="text-center mb-4">
+<h4 class="fw-bold mb-2">${esc(r.suggestedModel)}</h4>
+<div class="spec-display justify-content-center">
+<span class="spec-item">${esc(r.chip)}</span>
+<span class="spec-item">${r.ramGb} GB RAM</span>
+<span class="spec-item">${r.storageGb} GB Storage</span>
+<span class="spec-item">AED ${fmt(r.priceAed)}</span>
+</div>
+</div>
+
+<div class="row g-3 mt-3">
+<div class="col-md-6">
+<div class="tco-card">
+<h6 class="fw-semibold mb-3 text-muted">Windows TCO</h6>
+<div class="d-flex justify-content-between mb-2"><span class="small">Up-front:</span><span class="fw-semibold">AED ${fmt(r.windows.upfront)}</span></div>
+<div class="d-flex justify-content-between mb-2"><span class="small">Recurring/yr:</span><span class="fw-semibold">AED ${fmt(r.windows.recurringPerYear)}</span></div>
+<div class="d-flex justify-content-between mb-2"><span class="small">Downtime cost:</span><span class="fw-semibold text-danger">AED ${fmt(r.windows.downtimeCost || 0)}</span></div>
+<div class="d-flex justify-content-between mb-2"><span class="small">Resale (end):</span><span class="fw-semibold">AED ${fmt(r.windows.resaleAtEnd)}</span></div>
+<hr class="my-2">
+<div class="d-flex justify-content-between mt-3">
+<span class="fw-bold">Total:</span>
+<span class="fw-bold fs-5">AED ${fmt(r.windows.total)}</span>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="tco-card mac-card">
+<h6 class="fw-semibold mb-3" style="color: #0071e3;">Mac TCO</h6>
+<div class="d-flex justify-content-between mb-2"><span class="small">Up-front:</span><span class="fw-semibold">AED ${fmt(r.mac.upfront)}</span></div>
+<div class="d-flex justify-content-between mb-2"><span class="small">Recurring/yr:</span><span class="fw-semibold">AED ${fmt(r.mac.recurringPerYear)}</span></div>
+<div class="d-flex justify-content-between mb-2"><span class="small">Downtime cost:</span><span class="fw-semibold text-success">AED ${fmt(r.mac.downtimeCost || 0)}</span></div>
+<div class="d-flex justify-content-between mb-2"><span class="small">Resale (end):</span><span class="fw-semibold">AED ${fmt(r.mac.resaleAtEnd)}</span></div>
+${r.mac.securitySavings > 0 ? `<div class="d-flex justify-content-between mb-2"><span class="small text-success">Security savings:</span><span class="fw-semibold text-success">-AED ${fmt(r.mac.securitySavings)}</span></div>` : ''}
+<hr class="my-2">
+<div class="d-flex justify-content-between mt-3">
+<span class="fw-bold">Total:</span>
+<span class="fw-bold fs-5" style="color: #0071e3;">AED ${fmt(r.mac.total)}</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="savings-highlight">
+<h3>Total Savings</h3>
+<div class="savings-amount">AED ${fmt(r.savingsAed)}</div>
+<div class="fs-5">${r.savingsPct}% lower than Windows</div>
+</div>
+
+${advantagesHtml ? `
+<div class="mt-4">
+<h6 class="fw-semibold mb-3">Mac Advantages</h6>
+<ul class="advantages-list">
+${advantagesHtml}
+</ul>
+</div>
+` : ''}
+
+${recommendationsHtml ? `
+<div class="recommendations">
+<h6>Recommendations</h6>
+<ul>
+${recommendationsHtml}
+</ul>
+</div>
+` : ''}
+</div>
+  `;
+}
+ 
+// Original btn click handler - now loads both TCO and enhanced
+// Export machine data
+btnExport.addEventListener('click', () => {
+  window.location.href = '/export/machine-data.csv';
+});
+
+// Import machine data - show command modal first
+btnImport.addEventListener('click', async () => {
+  const importModal = new bootstrap.Modal(document.getElementById('importCommandModal'));
+  const cmdTextarea = document.getElementById('exportCommand');
+  if (cmdTextarea) {
+    // Fetch command from API to avoid Razor parsing issues
+    try {
+      const response = await fetch('/api/export/command');
+      const data = await response.json();
+      cmdTextarea.value = data.command || 'powershell -ExecutionPolicy Bypass -File export-to-desktop.ps1';
+    } catch (e) {
+      // Fallback if API fails
+      cmdTextarea.value = 'powershell -ExecutionPolicy Bypass -File export-to-desktop.ps1';
+    }
+  }
+  importModal.show();
+});
+
+// Copy export command to clipboard
+function copyExportCommand() {
+  const cmd = document.getElementById('exportCommand');
+  cmd.select();
+  cmd.setSelectionRange(0, 99999); // For mobile devices
+  document.execCommand('copy');
+  
+  // Show feedback
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = 'Copied!';
+  btn.classList.add('btn-success');
+  btn.classList.remove('btn-primary');
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.classList.remove('btn-success');
+    btn.classList.add('btn-primary');
+  }, 2000);
+}
+
+// Select all text in export command
+function selectExportCommand() {
+  const cmd = document.getElementById('exportCommand');
+  cmd.select();
+  cmd.setSelectionRange(0, 99999);
+}
+
+if (fileImport) {
+  fileImport.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check authentication first
+    if (!await requireAuth()) {
+      e.target.value = ''; // Clear file input
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const csvContent = event.target.result;
+        const persona = personaSelect ? personaSelect.value : 'General';
+        const years = (btn3y && btn3y.classList.contains('active')) ? 3 : 5;
+        const winPrice = (winPriceInput && winPriceInput.value.trim()) || '0';
+        
+        const response = await fetch(`/api/import/recommend?persona=${persona}&years=${years}&windowsPrice=${winPrice}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/csv' },
+          body: csvContent
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = '/Login';
+            return;
+          }
+          const errorText = await response.text();
+          throw new Error(`Import failed: ${response.statusText}. ${errorText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Show the recommendation modal with imported data
+        // Get the modal body element (ensure it exists) - try multiple times if needed
+        let modalBody = document.getElementById('suggestedMacBody');
+        let modalEl = document.getElementById('suggestedMacModal');
+        
+        if (!modalBody) {
+          // Wait a bit and try again
+          await new Promise(resolve => setTimeout(resolve, 100));
+          modalBody = document.getElementById('suggestedMacBody');
+        }
+        
+        if (!modalEl) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          modalEl = document.getElementById('suggestedMacModal');
+        }
+        
+        // Final check - if still null, something is wrong
+        if (!modalBody || !modalEl) {
+          console.error('Elements not found:', { modalBody: !!modalBody, modalEl: !!modalEl });
+          console.error('Available elements:', {
+            suggestedMacBody: !!document.getElementById('suggestedMacBody'),
+            suggestedMacModal: !!document.getElementById('suggestedMacModal')
+          });
+          throw new Error(`Required elements not found. Modal body: ${!!modalBody}, Modal: ${!!modalEl}. Please refresh the page.`);
+        }
+        
+        // Double-check before setting innerHTML
+        if (modalBody && typeof modalBody.innerHTML !== 'undefined') {
+          modalBody.innerHTML = '<div class="text-muted">Loading recommendations…</div>';
+        } else {
+          throw new Error('Cannot set innerHTML on modalBody element. Element may not be properly initialized.');
+        }
+        
+        // Create modal instance
+        let modalInstance = modal;
+        if (!modalInstance) {
+          modalInstance = new bootstrap.Modal(modalEl);
+        }
+        modalInstance.show();
+        
+        // Update UI with imported data
+        await loadTco();
+        await loadEnhanced();
+        await loadTiers();
+        
+        alert('Machine data imported successfully! Recommendations updated.');
+      } catch (error) {
+        console.error('Import error:', error);
+        alert(`Error importing data: ${error.message}`);
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+btn.addEventListener('click', async () => {
+  const savedYears = Number(localStorage.getItem('tcoYears') || '3');
+  const savedWinPrice = localStorage.getItem('tcoWinPrice') || '';
+
+  setYears((savedYears === 5) ? 5 : 3);
+  winPriceInput.value = savedWinPrice;
+
+  body.innerHTML = '<div class="text-muted">Looking up a match…</div>';
+  modal.show();
+  try { 
+    await loadTco(); 
+    await loadEnhanced();
+    await loadTiers();
+  } catch(e){ 
+    body.innerHTML = `<div class="alert alert-danger mb-0">Request failed. ${esc(String(e))}</div>`; 
+  }
+});
+ 
+btn3y.addEventListener('click', async ()=>{
+  setYears(3);
+  localStorage.setItem('tcoYears','3');
+  try { await loadTco(); await loadEnhanced(); await loadTiers(); } catch {}
+});
+
+btn5y.addEventListener('click', async ()=>{
+  setYears(5);
+  localStorage.setItem('tcoYears','5');
+  try { await loadTco(); await loadEnhanced(); await loadTiers(); } catch {}
+});
+ 
+recalcBtn.addEventListener('click', async ()=>{
+  localStorage.setItem('tcoWinPrice', winPriceInput.value.trim());
+  try { await loadTco(); await loadEnhanced(); await loadTiers(); } catch {}
+});
+
+/* ---- Enhanced Features ---- */
+// personaSelect is already defined above
+const personaDescription = document.getElementById('personaDescription');
+const tiersBody = document.getElementById('tiersBody');
+const compatibilityBody = document.getElementById('compatibilityBody');
+const insightsBody = document.getElementById('insightsBody');
+const advantagesBody = document.getElementById('advantagesBody');
+
+const personaDescriptions = {
+  'General': 'Balanced performance for everyday tasks',
+  'Developer': 'Strong CPU and RAM for compiling, VMs, and IDEs',
+  'Designer': 'GPU power for graphics work and color-accurate displays',
+  'OfficeWorker': 'Battery life and portability for meetings and travel',
+  'ITAdmin': 'Reliable performance for multiple tools and VMs',
+  'DataAnalyst': 'Maximum CPU and RAM for large datasets',
+  'Student': 'Long battery life and portability for campus use'
+};
+
+personaSelect.addEventListener('change', async () => {
+  const persona = personaSelect.value;
+  personaDescription.textContent = personaDescriptions[persona] || '';
+  localStorage.setItem('selectedPersona', persona);
+  try { 
+    await loadTco(); // Reload TCO with new persona
+    await loadEnhanced(); 
+    await loadTiers(); // Reload tiers with new persona
+  } catch {}
+});
+
+// Load saved persona
+const savedPersona = localStorage.getItem('selectedPersona') || 'General';
+personaSelect.value = savedPersona;
+personaDescription.textContent = personaDescriptions[savedPersona] || '';
+
+async function loadEnhanced() {
+  // Check authentication first
+  if (!await requireAuth()) {
+    return;
+  }
+
+  const price = Number(winPriceInput.value);
+  const qs = new URLSearchParams();
+  qs.set('years', String(currentYears));
+  qs.set('persona', personaSelect.value);
+  if (!Number.isNaN(price) && price >= 0 && winPriceInput.value.trim() !== '') {
+    qs.set('windowsPrice', String(Math.round(price)));
+  }
+
+  try {
+    const res = await fetch('/api/recommend/enhanced?' + qs.toString());
+    if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = '/Login';
+        return;
+      }
+      return;
+    }
+    
+    const data = await res.json();
+    
+    // Update compatibility tab
+    updateCompatibility(data);
+    
+    // Update insights tab
+    updateInsights(data);
+    
+    // Update Mac advantages tab
+    updateMacAdvantages(data);
+    
+    // Load tiers
+    await loadTiers();
+  } catch (e) {
+    console.error('Enhanced features error:', e);
+  }
+}
+
+function updateCompatibility(data) {
+  let html = '<h6 class="fw-semibold mb-3">App Compatibility</h6>';
+  
+  if (data.appCompatibilities && data.appCompatibilities.length > 0) {
+    const compatScore = data.appCompatibilities.reduce((sum, a) => sum + (a.compatibilityScore || 0), 0) / data.appCompatibilities.length;
+    html += `<div class="mb-3"><span class="badge bg-success">Overall: ${(compatScore * 100).toFixed(0)}% Compatible</span></div>`;
+    
+    html += '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>App</th><th>Status</th><th>Notes</th></tr></thead><tbody>';
+    data.appCompatibilities.forEach(app => {
+      const statusClass = app.compatibilityScore >= 0.9 ? 'success' : app.compatibilityScore >= 0.7 ? 'warning' : 'danger';
+      
+      // Handle enum as string (now configured) or number (fallback)
+      const typeStr = typeof app.type === 'number' 
+        ? ['NativeMacOS', 'WebSaaS', 'Rosetta2Compatible', 'RequiresVirtualization', 'NotCompatible', 'AlternativeAvailable'][app.type] || 'Unknown'
+        : (app.type || 'Unknown');
+      
+      const statusText = {
+        'NativeMacOS': 'Native',
+        'WebSaaS': 'Web App',
+        'Rosetta2Compatible': 'Rosetta 2',
+        'RequiresVirtualization': '⚠ Virtualization',
+        'AlternativeAvailable': '↻ Alternative',
+        'NotCompatible': '✗ Limited'
+      }[typeStr] || (app.notes ? 'Compatible' : 'Checking...');
+      
+      html += `<tr>
+        <td>${esc(app.appName || '')}</td>
+        <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+        <td class="small">${esc(app.notes || '')}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += '<p class="text-muted">No apps detected. Compatibility will be checked when apps are available.</p>';
+  }
+  
+  // Port compatibility
+  if (data.portCompatibility) {
+    html += '<hr class="my-4"><h6 class="fw-semibold mb-3">Port Compatibility</h6>';
+    if (data.portCompatibility.needsHub) {
+      html += `<div class="alert alert-info">
+        <strong>Hub Recommended:</strong> ${esc(data.portCompatibility.hubRecommendation || '')}
+        <br><small>Missing ports: ${data.portCompatibility.missingPorts?.join(', ') || 'None'}</small>
+      </div>`;
+    } else {
+      html += '<div class="alert alert-success">All required ports available - no hub needed</div>';
+    }
+    if (data.portCompatibility.availablePorts && data.portCompatibility.availablePorts.length > 0) {
+      html += `<p class="small mb-0"><strong>Available:</strong> ${data.portCompatibility.availablePorts.join(', ')}</p>`;
+    }
+  }
+  
+  compatibilityBody.innerHTML = html;
+}
+
+function updateInsights(data) {
+  let html = '';
+  
+  // AI Explanation
+  if (data.aiExplanation) {
+    html += '<div class="mb-4"><h6 class="fw-semibold mb-2">Why This Mac?</h6>';
+    html += `<div class="alert alert-light border">${esc(data.aiExplanation)}</div></div>`;
+  }
+  
+  // Carbon Footprint
+  if (data.carbonFootprint) {
+    html += '<div class="mb-4"><h6 class="fw-semibold mb-2">Environmental Impact</h6>';
+    html += `<div class="card border-success">
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-4">
+            <div class="h5 text-muted">${fmt(data.carbonFootprint.windowsCo2Kg || 0)}</div>
+            <small>Windows CO₂ (kg)</small>
+          </div>
+          <div class="col-4">
+            <div class="h5 text-success">${fmt(data.carbonFootprint.macCo2Kg || 0)}</div>
+            <small>Mac CO₂ (kg)</small>
+          </div>
+          <div class="col-4">
+            <div class="h5 text-primary">${fmt(data.carbonFootprint.savingsCo2Kg || 0)}</div>
+            <small>Savings (kg)</small>
+          </div>
+        </div>
+        <hr>
+        <p class="mb-0 small text-center">${esc(data.carbonFootprint.description || '')}</p>
+        ${data.carbonFootprint.equivalentTrees > 0 ? `<p class="text-center mt-2"><span class="badge bg-success">Equivalent to ${data.carbonFootprint.equivalentTrees} trees planted</span></p>` : ''}
+      </div>
+    </div></div>`;
+  }
+  
+  // Performance Radar Chart
+  if (data.performanceRadar) {
+    html += '<div class="mb-4"><h6 class="fw-semibold mb-2">Performance Comparison</h6>';
+    html += '<div class="text-center mb-3"><canvas id="radarChart" style="max-height: 300px;"></canvas></div>';
+    html += '</div>';
+    
+    // Render radar chart after HTML is inserted
+    setTimeout(() => {
+      const ctx = document.getElementById('radarChart');
+      if (ctx && window.Chart) {
+        // Check if we have both Windows and Mac data
+        const hasBothData = data.performanceRadar && data.performanceRadar.macData && data.performanceRadar.windowsData;
+        
+        let labels, macValues, windowsValues;
+        
+        if (hasBothData) {
+          // New format with both Windows and Mac data
+          labels = Object.keys(data.performanceRadar.macData);
+          macValues = Object.values(data.performanceRadar.macData).map(v => v * 100);
+          windowsValues = Object.values(data.performanceRadar.windowsData).map(v => v * 100);
+        } else {
+          // Fallback to old format (Mac only)
+          labels = Object.keys(data.performanceRadar);
+          macValues = Object.values(data.performanceRadar).map(v => v * 100);
+          windowsValues = labels.map(() => 50); // Default Windows baseline
+        }
+        
+        new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Windows',
+                data: windowsValues,
+                backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                borderColor: 'rgba(220, 53, 69, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(220, 53, 69, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(220, 53, 69, 1)'
+              },
+              {
+                label: 'Mac',
+                data: macValues,
+                backgroundColor: 'rgba(0, 113, 227, 0.2)',
+                borderColor: 'rgba(0, 113, 227, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(0, 113, 227, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(0, 113, 227, 1)'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+              r: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                  stepSize: 20,
+                  color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#1d1d1f',
+                  backdropColor: 'transparent'
+                },
+                grid: {
+                  color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') || '#e8e8ed'
+                },
+                pointLabels: {
+                  color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#1d1d1f'
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                  color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#1d1d1f',
+                  padding: 15,
+                  font: {
+                    size: 12
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }, 100);
+  }
+  
+  // Workflow Matches
+  if (data.workflowMatches && data.workflowMatches.length > 0) {
+    html += '<div class="mb-4"><h6 class="fw-semibold mb-2">Workflow Benefits</h6><ul class="advantages-list">';
+    data.workflowMatches.forEach(match => {
+      html += `<li>${esc(match)}</li>`;
+    });
+    html += '</ul></div>';
+  }
+  
+  insightsBody.innerHTML = html || '<p class="text-muted">Loading insights...</p>';
+}
+
+function updateMacAdvantages(data) {
+  let html = '';
+  
+  // Mac Advantages Section - What Mac Can Do That Windows Can't
+  if (data.macAdvantages && data.macAdvantages.length > 0) {
+    html += '<div class="mb-4">';
+    html += '<h5 class="fw-bold mb-3">What Mac Can Do That Windows Can\'t</h5>';
+    html += '<p class="text-muted mb-4">Discover the unique advantages Mac offers for your role that Windows simply can\'t match (or does significantly worse).</p>';
+    
+    data.macAdvantages.forEach((advantage, index) => {
+      html += `<div class="card mb-3 border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-start">
+            <div class="flex-shrink-0 me-3">
+              <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <span class="text-primary fw-bold">${index + 1}</span>
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="fw-semibold mb-2 text-primary">${esc(advantage.title || '')}</h6>
+              <p class="mb-2">${esc(advantage.description || '')}</p>
+              <div class="alert alert-light border-start border-danger border-3 mb-0">
+                <small class="text-muted"><strong>Windows Limitation:</strong> ${esc(advantage.windowsLimitation || '')}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+    
+    html += '</div>';
+  } else {
+    html = '<p class="text-muted">No advantages data available. Please select a role and generate recommendations.</p>';
+  }
+  
+  advantagesBody.innerHTML = html || '<p class="text-muted">Loading Mac advantages...</p>';
+}
+
+async function loadTiers() {
+  // Check authentication first
+  if (!await requireAuth()) {
+    return;
+  }
+
+  const price = Number(winPriceInput.value);
+  const qs = new URLSearchParams();
+  qs.set('years', String(currentYears));
+  if (!Number.isNaN(price) && price >= 0 && winPriceInput.value.trim() !== '') {
+    qs.set('windowsPrice', String(Math.round(price)));
+  }
+  // Add persona to tiers request
+  if (personaSelect && personaSelect.value) qs.set('persona', personaSelect.value);
+
+  try {
+    const res = await fetch('/api/recommend/tiers?' + qs.toString());
+    if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = '/Login';
+        return;
+      }
+      return;
+    }
+    
+    const tiers = await res.json();
+    
+    let html = '<div class="row g-3">';
+    tiers.forEach(tier => {
+      html += `<div class="col-md-4">
+        <div class="card h-100 ${tier.tier === 'Good' ? 'border-primary' : tier.tier === 'Better' ? 'border-info' : 'border-warning'}">
+          <div class="card-header bg-${tier.tier === 'Good' ? 'primary' : tier.tier === 'Better' ? 'info' : 'warning'} text-white">
+            <h6 class="mb-0 fw-bold">${esc(tier.tier)}</h6>
+          </div>
+          <div class="card-body">
+            <h6 class="card-title">${esc(tier.mac?.model || '')}</h6>
+            <p class="small text-muted mb-2">${esc(tier.mac?.chip || '')} · ${tier.mac?.ramGb || 0} GB · ${tier.mac?.storageGb || 0} GB</p>
+            <div class="mb-2">
+              <span class="badge bg-secondary">Similarity: ${(tier.similarity * 100).toFixed(2)}%</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="small">Total Cost:</span>
+              <span class="fw-bold">AED ${fmt(tier.totalCost || 0)}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="small">Savings:</span>
+              <span class="fw-bold text-success">AED ${fmt(tier.savings || 0)}</span>
+            </div>
+            <div class="mt-2">
+              <small class="text-muted">${tier.savingsPct?.toFixed(1) || 0}% lower than Windows</small>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    
+    tiersBody.innerHTML = html;
+  } catch (e) {
+    tiersBody.innerHTML = '<div class="alert alert-warning">Unable to load recommendation tiers.</div>';
+  }
+}
+
+
+// Update tabs when switching
+document.querySelectorAll('#recommendationTabs button').forEach(btn => {
+  btn.addEventListener('shown.bs.tab', async (e) => {
+    if (e.target.id === 'tiers-tab') await loadTiers();
+    if (e.target.id === 'compatibility-tab' || e.target.id === 'insights-tab' || e.target.id === 'advantages-tab') await loadEnhanced();
+  });
+});
+
+// PDF Export (placeholder - can be enhanced with jsPDF)
+function exportToPDF() {
+  alert('PDF export feature coming soon! This will generate a comprehensive ROI report.');
+  // TODO: Implement PDF generation using jsPDF or server-side PDF generation
+}
+</script>

@@ -1,0 +1,7 @@
+model,chip,cores_cpu,cores_gpu,ram_gb,storage_gb,display_inches,display_nits,refresh_hz,weight_kg,ports,msrp_aed,launch_date,battery_wh,wifi
+"MacBook Air 13 (M2)","M2",8,10,8,256,13.6,500,60,1.24,"2x TB/USB4 + MagSafe",3999,"2023-06-01",52.6,"Wi-Fi 6"
+"MacBook Air 13 (M3)","M3",8,10,8,256,13.6,500,60,1.24,"2x TB/USB4 + MagSafe",4199,"2024-03-01",52.6,"Wi-Fi 6E"
+"MacBook Air 15 (M3)","M3",8,10,8,256,15.3,500,60,1.51,"2x TB/USB4 + MagSafe",4899,"2024-03-01",66.5,"Wi-Fi 6E"
+"MacBook Pro 14 (M3)","M3",8,10,8,512,14.2,600,120,1.55,"3x TB4 + HDMI + SD + MagSafe",6999,"2024-11-01",70,"Wi-Fi 6E"
+"MacBook Pro 14 (M3 Pro)","M3 Pro",12,18,16,512,14.2,600,120,1.55,"3x TB4 + HDMI + SD + MagSafe",8599,"2024-11-01",72.4,"Wi-Fi 6E"
+"MacBook Pro 16 (M3 Pro)","M3 Pro",12,18,18,512,16.2,600,120,2.14,"3x TB4 + HDMI + SD + MagSafe",9999,"2024-11-01",100,"Wi-Fi 6E"
