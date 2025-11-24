@@ -5,9 +5,16 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
- 
+using Microsoft.AspNetCore.DataProtection;
+
 var builder = WebApplication.CreateBuilder(args);
- 
+
+// Configure Data Protection to persist keys (fixes key ring error)
+// For cloud deployments, use environment variable or file system
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new System.IO.DirectoryInfo("/tmp/dataprotection-keys"))
+    .SetApplicationName("WinInventory");
+
 builder.Services.AddRazorPages();
 
 // Configure Authentication
@@ -24,12 +31,18 @@ builder.Services.AddAuthentication(options =>
 })
 .AddGoogle(options =>
 {
-    var clientId = builder.Configuration["Authentication:Google:ClientId"] ?? builder.Configuration["GOOGLE_CLIENT_ID"];
-    var clientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? builder.Configuration["GOOGLE_CLIENT_SECRET"];
+    // Try multiple ways to get the configuration (environment variables first, then appsettings)
+    var clientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
+        ?? builder.Configuration["GOOGLE_CLIENT_ID"] 
+        ?? builder.Configuration["Authentication:Google:ClientId"];
+    var clientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")
+        ?? builder.Configuration["GOOGLE_CLIENT_SECRET"]
+        ?? builder.Configuration["Authentication:Google:ClientSecret"];
     
     // Only configure if real credentials are provided
     if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret) && 
-        !clientId.Contains("YOUR_GOOGLE_CLIENT") && !clientSecret.Contains("YOUR_GOOGLE_CLIENT"))
+        !clientId.Contains("YOUR_GOOGLE_CLIENT") && !clientSecret.Contains("YOUR_GOOGLE_CLIENT") &&
+        clientId != "DISABLED" && clientSecret != "DISABLED")
     {
         options.ClientId = clientId;
         options.ClientSecret = clientSecret;
@@ -43,12 +56,18 @@ builder.Services.AddAuthentication(options =>
 })
 .AddMicrosoftAccount(options =>
 {
-    var clientId = builder.Configuration["Authentication:Microsoft:ClientId"] ?? builder.Configuration["MICROSOFT_CLIENT_ID"];
-    var clientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"] ?? builder.Configuration["MICROSOFT_CLIENT_SECRET"];
+    // Try multiple ways to get the configuration (environment variables first, then appsettings)
+    var clientId = Environment.GetEnvironmentVariable("MICROSOFT_CLIENT_ID")
+        ?? builder.Configuration["MICROSOFT_CLIENT_ID"]
+        ?? builder.Configuration["Authentication:Microsoft:ClientId"];
+    var clientSecret = Environment.GetEnvironmentVariable("MICROSOFT_CLIENT_SECRET")
+        ?? builder.Configuration["MICROSOFT_CLIENT_SECRET"]
+        ?? builder.Configuration["Authentication:Microsoft:ClientSecret"];
     
     // Only configure if real credentials are provided
     if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret) && 
-        !clientId.Contains("YOUR_MICROSOFT_CLIENT") && !clientSecret.Contains("YOUR_MICROSOFT_CLIENT"))
+        !clientId.Contains("YOUR_MICROSOFT_CLIENT") && !clientSecret.Contains("YOUR_MICROSOFT_CLIENT") &&
+        clientId != "DISABLED" && clientSecret != "DISABLED")
     {
         options.ClientId = clientId;
         options.ClientSecret = clientSecret;
