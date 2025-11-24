@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -109,6 +110,13 @@ builder.Services.AddSingleton<EnhancedRecommendationService>();
 builder.Services.AddSingleton<UserDataService>();
  
 var app = builder.Build();
+
+// Configure forwarded headers for HTTPS detection (needed for cloud deployments like Render)
+app.UseForwardedHeaders(new Microsoft.AspNetCore.HttpOverrides.ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
 
 // Check if OAuth is properly configured (only require auth if real credentials are set)
 bool IsOAuthConfigured()
