@@ -594,45 +594,63 @@ if (fileImportMain) {
     const file = e.target.files[0];
     if (!file) return;
     
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-      const persona = 'balanced';
-      const years = 3;
-      const winPrice = 5000;
-      
-      const response = await fetch(`/api/import/recommend?persona=${persona}&years=${years}&windowsPrice=${winPrice}`, {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Import failed: ${response.statusText}. ${errorText}`);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const csvContent = event.target.result;
+        const persona = personaSelect ? personaSelect.value : 'General';
+        const years = (btn3y && btn3y.classList.contains('active')) ? 5 : 3;
+        const winPrice = (winPriceInput && winPriceInput.value.trim()) || '0';
+        
+        const response = await fetch(`/api/import/recommend?persona=${persona}&years=${years}&windowsPrice=${winPrice}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/csv' },
+          body: csvContent
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = '/Login';
+            return;
+          }
+          const errorText = await response.text();
+          throw new Error(`Import failed: ${response.statusText}. ${errorText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Get modal elements
+        let modalBody = document.getElementById('suggestedMacBody');
+        let modalEl = document.getElementById('suggestedMacModal');
+        
+        if (!modalBody || !modalEl) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          modalBody = document.getElementById('suggestedMacBody');
+          modalEl = document.getElementById('suggestedMacModal');
+        }
+        
+        if (!modalBody || !modalEl) {
+          throw new Error('Modal elements not found. Please refresh the page.');
+        }
+        
+        // Show modal and load recommendations
+        body.innerHTML = '<div class="text-muted">Loading recommendations…</div>';
+        modal.show();
+        
+        // Update UI with imported data
+        await loadTco();
+        await loadEnhanced();
+        await loadTiers();
+        
+        // Hide export/import section after successful import
+        const exportImportSection = document.getElementById('exportImportSection');
+        if (exportImportSection) exportImportSection.style.display = 'none';
+      } catch (error) {
+        console.error('Import error:', error);
+        alert(`Error importing data: ${error.message}`);
       }
-      
-      const result = await response.json();
-      
-      // Update UI with imported data
-      await loadTco();
-      await loadEnhanced();
-      await loadTiers();
-      
-      // Show overview after successful import
-      const overview = document.getElementById('overview');
-      const exportImportSection = document.getElementById('exportImportSection');
-      if (overview) overview.style.display = 'block';
-      if (exportImportSection) exportImportSection.style.display = 'none';
-      
-      alert('Machine data imported successfully! Your Windows details are now visible below.');
-      
-      // Reload page to show imported data in overview
-      setTimeout(() => window.location.reload(), 2000);
-    } catch (error) {
-      console.error('Import error:', error);
-      alert(`Error importing data: ${error.message}`);
-    }
+    };
+    reader.readAsText(file);
   });
 }
 
