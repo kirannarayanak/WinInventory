@@ -37,6 +37,13 @@ public class InventoryService
                     var totalMemBytes = ConvertToUInt64(cs["TotalPhysicalMemory"]);
                     mi.TotalMemoryGB  = $"{BytesToGB(totalMemBytes):0.##} GB";
                 }
+                else
+                {
+                    // WMI query returned no results - might be restricted
+                    mi.ComputerName = "Azure App Service";
+                    mi.Manufacturer = "Microsoft";
+                    mi.Model = "Azure";
+                }
             }
 
             using (var osSearcher = new ManagementObjectSearcher("SELECT Caption, Version, BuildNumber FROM Win32_OperatingSystem"))
@@ -78,15 +85,29 @@ public class InventoryService
                 }
             }
         }
-        catch (PlatformNotSupportedException)
+        catch (PlatformNotSupportedException ex)
         {
             // WMI not supported on this platform
             mi.ComputerName = "N/A (WMI not supported)";
             mi.OSName = Environment.OSVersion.VersionString;
+            System.Diagnostics.Debug.WriteLine($"WMI PlatformNotSupportedException: {ex.Message}");
         }
-        catch (Exception)
+        catch (System.Management.ManagementException ex)
+        {
+            // WMI access denied or restricted (common on Azure App Service)
+            mi.ComputerName = "Azure App Service (WMI Restricted)";
+            mi.Manufacturer = "Microsoft";
+            mi.Model = "Azure";
+            mi.OSName = Environment.OSVersion.VersionString;
+            mi.OSVersion = Environment.OSVersion.Version.ToString();
+            System.Diagnostics.Debug.WriteLine($"WMI ManagementException: {ex.Message}");
+        }
+        catch (Exception ex)
         {
             // Any other error - return what we have
+            mi.ComputerName = "Azure App Service";
+            mi.OSName = Environment.OSVersion.VersionString;
+            System.Diagnostics.Debug.WriteLine($"WMI Exception: {ex.Message}");
         }
 
         return mi;
