@@ -17,9 +17,7 @@
 <div class="d-flex align-items-center justify-content-between mb-3">
 <h1 class="mb-0">Windows Inventory</h1>
 <div class="d-flex gap-2 align-items-center">
-<button id="btnExportData" class="btn btn-outline-secondary" title="Export machine data for Mac recommendation">Export Data</button>
 <input type="file" id="fileImport" accept=".csv,.txt" style="display: none;">
-<button id="btnImportData" class="btn btn-outline-secondary" title="Import machine data and get Mac recommendation" style="display: none;">Import Data</button>
 <a class="btn btn-outline-secondary" href="/api/machineinfo" target="_blank">View JSON</a>
 <button id="btnSuggestedMac" class="btn btn-primary" style="display: none;">Suggested Mac</button>
 <div id="authSection" class="d-flex gap-2 align-items-center ms-3">
@@ -307,7 +305,6 @@ async function updateAuthUI() {
   const userInfo = document.getElementById('userInfo');
   const authSection = document.getElementById('authSection');
   const btnSuggestedMac = document.getElementById('btnSuggestedMac');
-  const btnImportData = document.getElementById('btnImportData');
   const instructionsSection = document.getElementById('instructionsSection');
   const exportImportSection = document.getElementById('exportImportSection');
   
@@ -322,7 +319,6 @@ async function updateAuthUI() {
         if (authSection) authSection.style.display = 'none';
         // Hide Mac suggestion features when not signed in
         if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
-        if (btnImportData) btnImportData.style.display = 'none';
         // Show instructions, hide export/import
         if (instructionsSection) instructionsSection.style.display = 'block';
         if (exportImportSection) exportImportSection.style.display = 'none';
@@ -340,7 +336,6 @@ async function updateAuthUI() {
       
       // Show Mac suggestion features when signed in
       if (btnSuggestedMac) btnSuggestedMac.style.display = 'block';
-      if (btnImportData) btnImportData.style.display = 'block';
       
       // Show export/import section when signed in
       if (instructionsSection) instructionsSection.style.display = 'none';
@@ -360,7 +355,6 @@ async function updateAuthUI() {
       // If check fails, hide auth section (OAuth not configured)
       if (authSection) authSection.style.display = 'none';
       if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
-      if (btnImportData) btnImportData.style.display = 'none';
       if (instructionsSection) instructionsSection.style.display = 'block';
       if (exportImportSection) exportImportSection.style.display = 'none';
     }
@@ -368,7 +362,6 @@ async function updateAuthUI() {
     // If check fails, hide auth section (OAuth not configured)
     if (authSection) authSection.style.display = 'none';
     if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
-    if (btnImportData) btnImportData.style.display = 'none';
     if (instructionsSection) instructionsSection.style.display = 'block';
     if (exportImportSection) exportImportSection.style.display = 'none';
   }
@@ -538,27 +531,8 @@ ${recommendationsHtml}
  
 // Original btn click handler - now loads both TCO and enhanced
 // Export machine data
-btnExport.addEventListener('click', () => {
-  window.location.href = '/export/machine-data.csv';
-});
-
-// Import machine data - show command modal first
-btnImport.addEventListener('click', async () => {
-  const importModal = new bootstrap.Modal(document.getElementById('importCommandModal'));
-  const cmdTextarea = document.getElementById('exportCommand');
-  if (cmdTextarea) {
-    // Fetch command from API to avoid Razor parsing issues
-    try {
-      const response = await fetch('/api/export/command');
-      const data = await response.json();
-      cmdTextarea.value = data.command || 'powershell -ExecutionPolicy Bypass -File export-to-desktop.ps1';
-    } catch (e) {
-      // Fallback if API fails
-      cmdTextarea.value = 'powershell -ExecutionPolicy Bypass -File export-to-desktop.ps1';
-    }
-  }
-  importModal.show();
-});
+// Removed Export/Import buttons from header - these handlers are no longer needed
+// Users now use the export/import section in the main content area
 
 // Copy export command to clipboard
 function copyExportCommand() {
@@ -642,9 +616,7 @@ if (fileImportMain) {
         await loadEnhanced();
         await loadTiers();
         
-        // Hide export/import section after successful import
-        const exportImportSection = document.getElementById('exportImportSection');
-        if (exportImportSection) exportImportSection.style.display = 'none';
+        // Keep export/import section visible in background
       } catch (error) {
         console.error('Import error:', error);
         alert(`Error importing data: ${error.message}`);
@@ -735,11 +707,7 @@ if (fileImport) {
         await loadEnhanced();
         await loadTiers();
         
-        // Hide export/import section after successful import
-        const exportImportSection = document.getElementById('exportImportSection');
-        if (exportImportSection) exportImportSection.style.display = 'none';
-        
-        // Modal is already shown above, no need to reload page
+        // Keep export/import section visible in background (modal is already shown above)
       } catch (error) {
         console.error('Import error:', error);
         alert(`Error importing data: ${error.message}`);
