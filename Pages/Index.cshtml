@@ -118,74 +118,6 @@
 </div>
 </div>
 
-<!-- Overview (shown if user has imported data) -->
-<div id="overview" style="display: @(Model.HasImportedData ? "block" : "none");">
-<p class="text-muted mb-3">Your Windows machine details:</p>
- 
-      <div class="row g-4">
-<div class="col-lg-6">
-<div class="card shadow-sm">
-<div class="card-body">
-<h5 class="card-title">Device</h5>
-<div class="row"><div class="col-5 text-muted">Computer Name</div><div class="col-7 fw-semibold">@Model.Info.ComputerName</div></div>
-<div class="row"><div class="col-5 text-muted">Manufacturer</div><div class="col-7 fw-semibold">@Model.Info.Manufacturer</div></div>
-<div class="row"><div class="col-5 text-muted">Model</div><div class="col-7 fw-semibold">@Model.Info.Model</div></div>
-<div class="row"><div class="col-5 text-muted">Memory</div><div class="col-7 fw-semibold">@Model.Info.TotalMemoryGB</div></div>
-</div>
-</div>
-</div>
- 
-        <div class="col-lg-6">
-<div class="card shadow-sm">
-<div class="card-body">
-<h5 class="card-title">Operating System</h5>
-<div class="row"><div class="col-5 text-muted">OS</div><div class="col-7 fw-semibold">@Model.Info.OSName</div></div>
-<div class="row"><div class="col-5 text-muted">Version</div><div class="col-7 fw-semibold">@Model.Info.OSVersion</div></div>
-<div class="row"><div class="col-5 text-muted">Build</div><div class="col-7 fw-semibold">@Model.Info.BuildNumber</div></div>
-</div>
-</div>
-</div>
- 
-        <div class="col-lg-6">
-<div class="card shadow-sm">
-<div class="card-body">
-<h5 class="card-title">Processor</h5>
-<div class="row"><div class="col-5 text-muted">CPU</div><div class="col-7 fw-semibold">@Model.Info.Processor</div></div>
-<div class="row"><div class="col-5 text-muted">Cores (Physical)</div><div class="col-7 fw-semibold">@Model.Info.PhysicalCores</div></div>
-<div class="row"><div class="col-5 text-muted">Cores (Logical)</div><div class="col-7 fw-semibold">@Model.Info.LogicalCores</div></div>
-</div>
-</div>
-</div>
- 
-        <div class="col-lg-6">
-<div class="card shadow-sm">
-<div class="card-body">
-<h5 class="card-title">Disks</h5>
-<div class="table-responsive">
-<table class="table table-sm align-middle">
-<thead><tr><th>Drive</th><th>File System</th><th>Size</th><th>Free</th></tr></thead>
-<tbody>
-                  @foreach (var d in Model.Info.Disks)
-                  {
-<tr><td>@d.Name</td><td>@d.FileSystem</td><td>@d.SizeGB</td><td>@d.FreeGB</td></tr>
-                  }
-</tbody>
-</table>
-</div>
-</div>
-</div>
-</div>
- 
-      </div>
- 
-      <hr class="my-4"/>
-<div class="d-flex gap-2">
-<button class="btn btn-outline-secondary" onclick="window.print()">Print</button>
-</div>
-</div>
- 
-</div>
-</div>
  
 <!-- Import Command Modal -->
 <div class="modal fade" id="importCommandModal" tabindex="-1" aria-hidden="true">
@@ -378,7 +310,6 @@ async function updateAuthUI() {
   const btnImportData = document.getElementById('btnImportData');
   const instructionsSection = document.getElementById('instructionsSection');
   const exportImportSection = document.getElementById('exportImportSection');
-  const overview = document.getElementById('overview');
   
   try {
     const testRes = await fetch('/api/auth/check');
@@ -392,10 +323,9 @@ async function updateAuthUI() {
         // Hide Mac suggestion features when not signed in
         if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
         if (btnImportData) btnImportData.style.display = 'none';
-        // Show instructions, hide export/import and overview
+        // Show instructions, hide export/import
         if (instructionsSection) instructionsSection.style.display = 'block';
         if (exportImportSection) exportImportSection.style.display = 'none';
-        if (overview) overview.style.display = 'none';
         return;
       }
       
@@ -412,20 +342,9 @@ async function updateAuthUI() {
       if (btnSuggestedMac) btnSuggestedMac.style.display = 'block';
       if (btnImportData) btnImportData.style.display = 'block';
       
-      // Check if user has imported data
-      const hasData = checkIfHasImportedData();
-      
-      if (hasData) {
-        // User has imported data - show overview, hide export/import
-        if (instructionsSection) instructionsSection.style.display = 'none';
-        if (exportImportSection) exportImportSection.style.display = 'none';
-        if (overview) overview.style.display = 'block';
-      } else {
-        // No data yet - show export/import, hide overview
-        if (instructionsSection) instructionsSection.style.display = 'none';
-        if (exportImportSection) exportImportSection.style.display = 'block';
-        if (overview) overview.style.display = 'none';
-      }
+      // Show export/import section when signed in
+      if (instructionsSection) instructionsSection.style.display = 'none';
+      if (exportImportSection) exportImportSection.style.display = 'block';
       
       // Load export command
       loadExportCommand();
@@ -444,7 +363,6 @@ async function updateAuthUI() {
       if (btnImportData) btnImportData.style.display = 'none';
       if (instructionsSection) instructionsSection.style.display = 'block';
       if (exportImportSection) exportImportSection.style.display = 'none';
-      if (overview) overview.style.display = 'none';
     }
   } catch (e) {
     // If check fails, hide auth section (OAuth not configured)
@@ -453,7 +371,6 @@ async function updateAuthUI() {
     if (btnImportData) btnImportData.style.display = 'none';
     if (instructionsSection) instructionsSection.style.display = 'block';
     if (exportImportSection) exportImportSection.style.display = 'none';
-    if (overview) overview.style.display = 'none';
   }
 }
 
@@ -491,19 +408,6 @@ function selectExportCommandMain() {
   if (cmd) {
     cmd.select();
   }
-}
-
-// Check if user has imported data
-function checkIfHasImportedData() {
-  // Check if overview has real data (not empty/N/A/Azure)
-  const computerName = document.querySelector('#overview .card-body .row .fw-semibold')?.textContent?.trim() || '';
-  const manufacturer = document.querySelectorAll('#overview .card-body .row .fw-semibold')[1]?.textContent?.trim() || '';
-  
-  return computerName && 
-         !computerName.includes('N/A') && 
-         !computerName.includes('Azure') &&
-         manufacturer &&
-         manufacturer.length > 0;
 }
 
 // Run on page load
@@ -808,21 +712,16 @@ if (fileImport) {
         }
         modalInstance.show();
         
-        // Update UI with imported data first
+        // Update UI with imported data and show modal
         await loadTco();
         await loadEnhanced();
         await loadTiers();
         
-        // Show overview after successful import
-        const overview = document.getElementById('overview');
+        // Hide export/import section after successful import
         const exportImportSection = document.getElementById('exportImportSection');
-        if (overview) overview.style.display = 'block';
         if (exportImportSection) exportImportSection.style.display = 'none';
         
-        alert('Machine data imported successfully! Your Windows details are now visible below.');
-        
-        // Reload page to show imported data in overview
-        setTimeout(() => window.location.reload(), 2000);
+        // Modal is already shown above, no need to reload page
       } catch (error) {
         console.error('Import error:', error);
         alert(`Error importing data: ${error.message}`);
