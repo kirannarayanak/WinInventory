@@ -30,10 +30,97 @@
 </div>
 </div>
  
-  <div class="border rounded p-3 bg-white">
-<!-- Overview -->
-<div id="overview">
-<p class="text-muted mb-3">Basic system details gathered locally via WMI/Registry.</p>
+  <div class="border rounded p-4 bg-white">
+<!-- Instructions (shown when NOT signed in) -->
+<div id="instructionsSection">
+<h3 class="mb-4">How to Get Your Windows Machine Data</h3>
+<p class="text-muted mb-4">To see your Windows machine details and get Mac recommendations, you need to export your machine data locally and import it here.</p>
+
+<div class="row g-4">
+<div class="col-md-6">
+<div class="card border-primary">
+<div class="card-body">
+<h5 class="card-title text-primary">Step 1: Export Data from Your Windows PC</h5>
+<ol class="mb-0">
+<li>Run the app locally on your Windows machine</li>
+<li>Open PowerShell in the project folder</li>
+<li>Run: <code class="bg-light p-1 rounded">dotnet run</code></li>
+<li>Open: <code class="bg-light p-1 rounded">http://localhost:5000</code></li>
+<li>Click <strong>"Export Data"</strong> button</li>
+<li>A CSV file will download with your machine details</li>
+</ol>
+</div>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="card border-success">
+<div class="card-body">
+<h5 class="card-title text-success">Step 2: Import Data Here</h5>
+<ol class="mb-0">
+<li>Sign in to this app (top right)</li>
+<li>Click <strong>"Import Data"</strong> button</li>
+<li>Select the CSV file you exported</li>
+<li>Your Windows machine details will appear</li>
+<li>Get Mac recommendations based on your PC</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+
+<div class="alert alert-info mt-4 mb-0">
+<strong>Why?</strong> This app runs on Azure servers, so it can't directly access your Windows PC. You need to export your data locally and import it here.
+</div>
+</div>
+
+<!-- Export/Import Section (shown when signed in) -->
+<div id="exportImportSection" style="display: none;">
+<h3 class="mb-4">Get Your Windows Machine Data</h3>
+<p class="text-muted mb-4">Export your machine data from your Windows PC, then import it here to see your details and get Mac recommendations.</p>
+
+<div class="card border-primary mb-4">
+<div class="card-header bg-primary text-white">
+<h5 class="mb-0">Step 1: Export Data from Your Windows PC</h5>
+</div>
+<div class="card-body">
+<p class="mb-3">Run this command on your Windows PC (in PowerShell):</p>
+<div class="mb-3">
+<textarea id="exportCommandMain" class="form-control font-monospace" rows="3" readonly style="font-size: 0.9rem; background-color: #f8f9fa;"></textarea>
+</div>
+<div class="d-flex gap-2 mb-3">
+<button class="btn btn-primary" onclick="copyExportCommandMain()">Copy Command</button>
+<button class="btn btn-outline-secondary" onclick="selectExportCommandMain()">Select All</button>
+</div>
+<div class="alert alert-light mb-0">
+<strong>Steps:</strong><br>
+1. Copy the command above<br>
+2. Open PowerShell on your Windows PC<br>
+3. Navigate to the project folder<br>
+4. Paste and press Enter<br>
+5. A CSV file will be saved to your Desktop
+</div>
+</div>
+</div>
+
+<div class="card border-success">
+<div class="card-header bg-success text-white">
+<h5 class="mb-0">Step 2: Import Data Here</h5>
+</div>
+<div class="card-body">
+<p class="mb-3">Upload the CSV file you exported:</p>
+<input type="file" id="fileImportMain" accept=".csv,.txt" style="display: none;">
+<button class="btn btn-success btn-lg" onclick="document.getElementById('fileImportMain').click()">
+📁 Choose File to Import
+</button>
+<p class="text-muted mt-3 mb-0">After importing, your Windows machine details will appear and you can get Mac recommendations.</p>
+</div>
+</div>
+</div>
+
+<!-- Overview (hidden by default, shown after import) -->
+<div id="overview" style="display: none;">
+<p class="text-muted mb-3">Your Windows machine details:</p>
  
       <div class="row g-4">
 <div class="col-lg-6">
@@ -289,6 +376,9 @@ async function updateAuthUI() {
   const authSection = document.getElementById('authSection');
   const btnSuggestedMac = document.getElementById('btnSuggestedMac');
   const btnImportData = document.getElementById('btnImportData');
+  const instructionsSection = document.getElementById('instructionsSection');
+  const exportImportSection = document.getElementById('exportImportSection');
+  const overview = document.getElementById('overview');
   
   try {
     const testRes = await fetch('/api/auth/check');
@@ -302,6 +392,10 @@ async function updateAuthUI() {
         // Hide Mac suggestion features when not signed in
         if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
         if (btnImportData) btnImportData.style.display = 'none';
+        // Show instructions, hide export/import and overview
+        if (instructionsSection) instructionsSection.style.display = 'block';
+        if (exportImportSection) exportImportSection.style.display = 'none';
+        if (overview) overview.style.display = 'none';
         return;
       }
       
@@ -318,6 +412,14 @@ async function updateAuthUI() {
       if (btnSuggestedMac) btnSuggestedMac.style.display = 'block';
       if (btnImportData) btnImportData.style.display = 'block';
       
+      // Hide instructions, show export/import section when signed in
+      if (instructionsSection) instructionsSection.style.display = 'none';
+      if (exportImportSection) exportImportSection.style.display = 'block';
+      if (overview) overview.style.display = 'none'; // Hide overview until data is imported
+      
+      // Load export command
+      loadExportCommand();
+      
       // Save user and machine data when signed in
       try {
         await fetch('/api/user/save-machine-data', { method: 'POST' });
@@ -330,12 +432,54 @@ async function updateAuthUI() {
       if (authSection) authSection.style.display = 'none';
       if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
       if (btnImportData) btnImportData.style.display = 'none';
+      if (instructionsSection) instructionsSection.style.display = 'block';
+      if (exportImportSection) exportImportSection.style.display = 'none';
+      if (overview) overview.style.display = 'none';
     }
   } catch (e) {
     // If check fails, hide auth section (OAuth not configured)
     if (authSection) authSection.style.display = 'none';
     if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
     if (btnImportData) btnImportData.style.display = 'none';
+    if (instructionsSection) instructionsSection.style.display = 'block';
+    if (exportImportSection) exportImportSection.style.display = 'none';
+    if (overview) overview.style.display = 'none';
+  }
+}
+
+// Load export command into main textarea
+async function loadExportCommand() {
+  const cmdTextarea = document.getElementById('exportCommandMain');
+  if (!cmdTextarea) return;
+  
+  try {
+    const response = await fetch('/api/export/command');
+    if (response.ok) {
+      const data = await response.json();
+      cmdTextarea.value = data.command || 'powershell -ExecutionPolicy Bypass -File export-to-desktop.ps1';
+    } else {
+      cmdTextarea.value = 'powershell -ExecutionPolicy Bypass -File export-to-desktop.ps1';
+    }
+  } catch (e) {
+    cmdTextarea.value = 'powershell -ExecutionPolicy Bypass -File export-to-desktop.ps1';
+  }
+}
+
+// Copy export command from main section
+function copyExportCommandMain() {
+  const cmd = document.getElementById('exportCommandMain');
+  if (cmd) {
+    cmd.select();
+    document.execCommand('copy');
+    alert('Command copied to clipboard!');
+  }
+}
+
+// Select all export command text
+function selectExportCommandMain() {
+  const cmd = document.getElementById('exportCommandMain');
+  if (cmd) {
+    cmd.select();
   }
 }
 
@@ -514,6 +658,48 @@ function selectExportCommand() {
   const cmd = document.getElementById('exportCommand');
   cmd.select();
   cmd.setSelectionRange(0, 99999);
+}
+
+// Handle file import from main section
+const fileImportMain = document.getElementById('fileImportMain');
+if (fileImportMain) {
+  fileImportMain.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const persona = 'balanced';
+      const years = 3;
+      const winPrice = 5000;
+      
+      const response = await fetch(`/api/import/recommend?persona=${persona}&years=${years}&windowsPrice=${winPrice}`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Import failed: ${response.statusText}. ${errorText}`);
+      }
+      
+      const result = await response.json();
+      
+      // Show overview after successful import
+      const overview = document.getElementById('overview');
+      const exportImportSection = document.getElementById('exportImportSection');
+      if (overview) overview.style.display = 'block';
+      if (exportImportSection) exportImportSection.style.display = 'none';
+      
+      // Reload page to show imported data
+      window.location.reload();
+    } catch (error) {
+      console.error('Import error:', error);
+      alert(`Error importing data: ${error.message}`);
+    }
+  });
 }
 
 if (fileImport) {
