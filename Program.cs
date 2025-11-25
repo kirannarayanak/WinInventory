@@ -289,7 +289,7 @@ app.MapGet("/export/machine-data.csv", (InventoryService svc) =>
 });
 
 // Import machine data and get Mac recommendation
-app.MapPost("/api/import/recommend", async (HttpRequest req, CatalogService cat, MatcherService match, TcoService tco, PersonaService persona, EnhancedRecommendationService enhanced) =>
+app.MapPost("/api/import/recommend", async (HttpRequest req, HttpContext ctx, UserDataService userDataService, CatalogService cat, MatcherService match, TcoService tco, PersonaService persona, EnhancedRecommendationService enhanced) =>
 {
     try
     {
@@ -352,6 +352,21 @@ app.MapPost("/api/import/recommend", async (HttpRequest req, CatalogService cat,
             }
         }
         
+        // Save imported data to UserDataService if user is authenticated
+        if (ctx.User.Identity?.IsAuthenticated == true)
+        {
+            var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+            var email = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
+            var name = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? 
+                      ctx.User.FindFirst("name")?.Value ?? 
+                      email;
+            var provider = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.AuthenticationMethod)?.Value ?? 
+                         ctx.User.FindFirst("http://schemas.microsoft.com/identity/claims/identityprovider")?.Value ?? 
+                         "Unknown";
+            
+            userDataService.SaveUserMachineData(userId, email, name, provider, machine, apps);
+        }
+        
         // Get Mac recommendations
         var macs = cat.GetMacCatalog();
         if (macs.Count == 0)
@@ -386,7 +401,7 @@ app.MapPost("/api/import/recommend", async (HttpRequest req, CatalogService cat,
  
 // Top match + TCO (3y or 5y), optional windowsPrice
 
-app.MapGet("/api/recommend/tco", (HttpRequest req, HttpContext ctx, InventoryService inv, CatalogService cat, MatcherService match, TcoService tco) =>
+app.MapGet("/api/recommend/tco", (HttpRequest req, HttpContext ctx, InventoryService inv, UserDataService userDataService, CatalogService cat, MatcherService match, TcoService tco) =>
 {
     // Require authentication if OAuth is configured
     if (authRequired && (!ctx.User.Identity?.IsAuthenticated ?? true))
@@ -394,7 +409,25 @@ app.MapGet("/api/recommend/tco", (HttpRequest req, HttpContext ctx, InventorySer
         return Results.Unauthorized();
     }
 
-    var win  = inv.GetMachineInfo();
+    // Try to get imported data first, fallback to WMI
+    MachineInfo win;
+    if (ctx.User.Identity?.IsAuthenticated == true)
+    {
+        var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        var userData = userDataService.GetUserMachineData(userId);
+        if (userData != null && userData.MachineInfo != null)
+        {
+            win = userData.MachineInfo;
+        }
+        else
+        {
+            win = inv.GetMachineInfo();
+        }
+    }
+    else
+    {
+        win = inv.GetMachineInfo();
+    }
 
     var macs = cat.GetMacCatalog();
 
@@ -539,6 +572,7 @@ app.MapGet("/api/recommend/enhanced", (
     HttpRequest req,
     HttpContext ctx,
     InventoryService inv,
+    UserDataService userDataService,
     CatalogService cat,
     EnhancedRecommendationService enhanced,
     PersonaService persona) =>
@@ -548,7 +582,33 @@ app.MapGet("/api/recommend/enhanced", (
     {
         return Results.Unauthorized();
     }
-    var win = inv.GetMachineInfo();
+    
+    // Try to get imported data first, fallback to WMI
+    MachineInfo win;
+    List<string> applications = new();
+    if (ctx.User.Identity?.IsAuthenticated == true)
+    {
+        var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        var userData = userDataService.GetUserMachineData(userId);
+        if (userData != null && userData.MachineInfo != null)
+        {
+            win = userData.MachineInfo;
+            applications = userData.InstalledApplications ?? new List<string>();
+        }
+        else
+        {
+            win = inv.GetMachineInfo();
+            var installedApps = inv.GetInstalledApplications();
+            applications = installedApps.Select(a => a.Name).Take(20).ToList();
+        }
+    }
+    else
+    {
+        win = inv.GetMachineInfo();
+        var installedApps = inv.GetInstalledApplications();
+        applications = installedApps.Select(a => a.Name).Take(20).ToList();
+    }
+    
     var macs = cat.GetMacCatalog();
     
     if (macs.Count == 0) return Results.NotFound(new { message = "No catalog entries found" });
@@ -563,17 +623,11 @@ app.MapGet("/api/recommend/enhanced", (
     UserPersona? userPersona = null;
     if (Enum.TryParse<UserPersona>(req.Query["persona"], true, out var p)) userPersona = p;
     
-    var applications = new List<string>();
+    // Override applications if provided in query
     var appsParam = req.Query["apps"].ToString();
     if (!string.IsNullOrWhiteSpace(appsParam))
     {
         applications = appsParam.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
-    }
-    else
-    {
-        // Auto-detect from installed apps
-        var installedApps = inv.GetInstalledApplications();
-        applications = installedApps.Select(a => a.Name).Take(20).ToList(); // Limit to top 20 for performance
     }
     
     try
@@ -592,6 +646,7 @@ app.MapGet("/api/recommend/tiers", (
     HttpRequest req,
     HttpContext ctx,
     InventoryService inv,
+    UserDataService userDataService,
     CatalogService cat,
     MatcherService match,
     TcoService tco) =>
@@ -601,7 +656,27 @@ app.MapGet("/api/recommend/tiers", (
     {
         return Results.Unauthorized();
     }
-    var win = inv.GetMachineInfo();
+    
+    // Try to get imported data first, fallback to WMI
+    MachineInfo win;
+    if (ctx.User.Identity?.IsAuthenticated == true)
+    {
+        var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        var userData = userDataService.GetUserMachineData(userId);
+        if (userData != null && userData.MachineInfo != null)
+        {
+            win = userData.MachineInfo;
+        }
+        else
+        {
+            win = inv.GetMachineInfo();
+        }
+    }
+    else
+    {
+        win = inv.GetMachineInfo();
+    }
+    
     var macs = cat.GetMacCatalog();
     
     // Get persona if provided
