@@ -12,7 +12,7 @@
   document.documentElement.setAttribute('data-theme', savedTheme);
 })();
 </script>
-
+ 
 <div class="container py-4">
 <div class="d-flex align-items-center justify-content-between mb-3">
 <h1 class="mb-0">Windows Inventory</h1>
@@ -102,7 +102,7 @@
 </div>
 </div>
 </div>
-
+ 
 <div class="card border-success">
 <div class="card-header bg-success text-white">
 <h5 class="mb-0">Step 2: Import Data Here</h5>
@@ -118,8 +118,8 @@
 </div>
 </div>
 
-<!-- Overview (hidden by default, shown after import) -->
-<div id="overview" style="display: none;">
+<!-- Overview (shown if user has imported data) -->
+<div id="overview" style="display: @(Model.HasImportedData ? "block" : "none");">
 <p class="text-muted mb-3">Your Windows machine details:</p>
  
       <div class="row g-4">
@@ -220,7 +220,7 @@
 </div>
 </div>
 </div>
-
+ 
 <!-- Suggested Mac Modal -->
 <div class="modal fade" id="suggestedMacModal" tabindex="-1" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -229,7 +229,7 @@
 <h5 class="modal-title">Mac Recommendation & TCO Analysis</h5>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
-
+ 
       <div class="modal-body">
 <!-- Persona Selector -->
 <div class="mb-3">
@@ -317,7 +317,7 @@
 </div>
 </div>
 </div>
-
+ 
       <div class="modal-footer">
 <button type="button" class="btn btn-outline-secondary" id="btnExportPDF" onclick="exportToPDF()">Export PDF</button>
 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -338,7 +338,7 @@ const fileImport = document.getElementById('fileImport');
 const body = document.getElementById('suggestedMacBody');
 const modalElement = document.getElementById('suggestedMacModal');
 const modal = modalElement ? new bootstrap.Modal(modalElement) : null;
-
+ 
 const btn3y = document.getElementById('tco3');
 const btn5y = document.getElementById('tco5');
 const winPriceInput = document.getElementById('winPrice');
@@ -412,10 +412,20 @@ async function updateAuthUI() {
       if (btnSuggestedMac) btnSuggestedMac.style.display = 'block';
       if (btnImportData) btnImportData.style.display = 'block';
       
-      // Hide instructions, show export/import section when signed in
-      if (instructionsSection) instructionsSection.style.display = 'none';
-      if (exportImportSection) exportImportSection.style.display = 'block';
-      if (overview) overview.style.display = 'none'; // Hide overview until data is imported
+      // Check if user has imported data
+      const hasData = checkIfHasImportedData();
+      
+      if (hasData) {
+        // User has imported data - show overview, hide export/import
+        if (instructionsSection) instructionsSection.style.display = 'none';
+        if (exportImportSection) exportImportSection.style.display = 'none';
+        if (overview) overview.style.display = 'block';
+      } else {
+        // No data yet - show export/import, hide overview
+        if (instructionsSection) instructionsSection.style.display = 'none';
+        if (exportImportSection) exportImportSection.style.display = 'block';
+        if (overview) overview.style.display = 'none';
+      }
       
       // Load export command
       loadExportCommand();
@@ -483,6 +493,19 @@ function selectExportCommandMain() {
   }
 }
 
+// Check if user has imported data
+function checkIfHasImportedData() {
+  // Check if overview has real data (not empty/N/A/Azure)
+  const computerName = document.querySelector('#overview .card-body .row .fw-semibold')?.textContent?.trim() || '';
+  const manufacturer = document.querySelectorAll('#overview .card-body .row .fw-semibold')[1]?.textContent?.trim() || '';
+  
+  return computerName && 
+         !computerName.includes('N/A') && 
+         !computerName.includes('Azure') &&
+         manufacturer &&
+         manufacturer.length > 0;
+}
+
 // Run on page load
 updateAuthUI();
 
@@ -512,9 +535,9 @@ async function loadTco() {
   if (!Number.isNaN(price) && price >= 0 && winPriceInput.value.trim() !== '') qs.set('windowsPrice', String(Math.round(price)));
   // Add persona to TCO request
   if (personaSelect && personaSelect.value) qs.set('persona', personaSelect.value);
-
+ 
   body.innerHTML = '<div class="text-muted">Calculating TCO…</div>';
-
+ 
   const res = await fetch('/api/recommend/tco?' + qs.toString());
   if (!res.ok) {
     if (res.status === 401) {
@@ -532,14 +555,14 @@ async function loadTco() {
   
   // Build recommendations list
   const recommendationsHtml = (r.recommendations || []).map(rec => `<li>${esc(rec)}</li>`).join('');
-
+ 
   body.innerHTML = `
 <div class="fade-in">
 <div class="mb-3 text-center">
 <span class="similarity-badge">${(r.similarity * 100).toFixed(1)}% Match</span>
 <span class="badge bg-secondary-subtle text-secondary border ms-2">${r.mac.years} Year Analysis</span>
 </div>
-
+ 
 <div class="text-center mb-4">
 <h4 class="fw-bold mb-2">${esc(r.suggestedModel)}</h4>
 <div class="spec-display justify-content-center">
@@ -581,7 +604,7 @@ ${r.mac.securitySavings > 0 ? `<div class="d-flex justify-content-between mb-2">
 </div>
 </div>
 </div>
-
+ 
 <div class="savings-highlight">
 <h3>Total Savings</h3>
 <div class="savings-amount">AED ${fmt(r.savingsAed)}</div>
@@ -687,14 +710,21 @@ if (fileImportMain) {
       
       const result = await response.json();
       
+      // Update UI with imported data
+      await loadTco();
+      await loadEnhanced();
+      await loadTiers();
+      
       // Show overview after successful import
       const overview = document.getElementById('overview');
       const exportImportSection = document.getElementById('exportImportSection');
       if (overview) overview.style.display = 'block';
       if (exportImportSection) exportImportSection.style.display = 'none';
       
-      // Reload page to show imported data
-      window.location.reload();
+      alert('Machine data imported successfully! Your Windows details are now visible below.');
+      
+      // Reload page to show imported data in overview
+      setTimeout(() => window.location.reload(), 2000);
     } catch (error) {
       console.error('Import error:', error);
       alert(`Error importing data: ${error.message}`);
@@ -778,21 +808,21 @@ if (fileImport) {
         }
         modalInstance.show();
         
+        // Update UI with imported data first
+        await loadTco();
+        await loadEnhanced();
+        await loadTiers();
+        
         // Show overview after successful import
         const overview = document.getElementById('overview');
         const exportImportSection = document.getElementById('exportImportSection');
         if (overview) overview.style.display = 'block';
         if (exportImportSection) exportImportSection.style.display = 'none';
         
-        // Update UI with imported data
-        await loadTco();
-        await loadEnhanced();
-        await loadTiers();
-        
-        alert('Machine data imported successfully! Your Windows details are now visible.');
+        alert('Machine data imported successfully! Your Windows details are now visible below.');
         
         // Reload page to show imported data in overview
-        setTimeout(() => window.location.reload(), 1500);
+        setTimeout(() => window.location.reload(), 2000);
       } catch (error) {
         console.error('Import error:', error);
         alert(`Error importing data: ${error.message}`);
@@ -801,14 +831,14 @@ if (fileImport) {
     reader.readAsText(file);
   });
 }
-
+ 
 btn.addEventListener('click', async () => {
   const savedYears = Number(localStorage.getItem('tcoYears') || '3');
   const savedWinPrice = localStorage.getItem('tcoWinPrice') || '';
-
+ 
   setYears((savedYears === 5) ? 5 : 3);
   winPriceInput.value = savedWinPrice;
-
+ 
   body.innerHTML = '<div class="text-muted">Looking up a match…</div>';
   modal.show();
   try { 
@@ -825,7 +855,7 @@ btn3y.addEventListener('click', async ()=>{
   localStorage.setItem('tcoYears','3');
   try { await loadTco(); await loadEnhanced(); await loadTiers(); } catch {}
 });
-
+ 
 btn5y.addEventListener('click', async ()=>{
   setYears(5);
   localStorage.setItem('tcoYears','5');
