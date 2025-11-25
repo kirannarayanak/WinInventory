@@ -778,12 +778,21 @@ if (fileImport) {
         }
         modalInstance.show();
         
+        // Show overview after successful import
+        const overview = document.getElementById('overview');
+        const exportImportSection = document.getElementById('exportImportSection');
+        if (overview) overview.style.display = 'block';
+        if (exportImportSection) exportImportSection.style.display = 'none';
+        
         // Update UI with imported data
         await loadTco();
         await loadEnhanced();
         await loadTiers();
         
-        alert('Machine data imported successfully! Recommendations updated.');
+        alert('Machine data imported successfully! Your Windows details are now visible.');
+        
+        // Reload page to show imported data in overview
+        setTimeout(() => window.location.reload(), 1500);
       } catch (error) {
         console.error('Import error:', error);
         alert(`Error importing data: ${error.message}`);
