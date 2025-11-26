@@ -1017,6 +1017,31 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 4px 16px var(--shadow) !important;
 }
 
+/* Footer Styling */
+.footer {
+    background: var(--bg-primary) !important;
+    border-top-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
+    padding: 1.5rem 0 !important;
+    margin-top: 3rem !important;
+}
+
+.footer a {
+    color: var(--text-secondary) !important;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: var(--text-primary) !important;
+}
+
+/* Ensure main content has enough bottom padding to avoid footer collision */
+main {
+    padding-bottom: 4rem !important;
+    margin-bottom: 2rem !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .modal-body {
@@ -1025,6 +1050,15 @@ h1, h2, h3, h4, h5, h6 {
     
     .savings-highlight .savings-amount {
         font-size: 2rem;
+    }
+    
+    .footer {
+        padding: 1rem 0 !important;
+        margin-top: 2rem !important;
+    }
+    
+    main {
+        padding-bottom: 3rem !important;
     }
 }
 
