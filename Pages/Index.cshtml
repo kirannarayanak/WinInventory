@@ -718,36 +718,45 @@ if (fileImport) {
 }
  
 btn.addEventListener('click', async () => {
-  // Check if user has imported data first
+  // Check if user has imported data first - REQUIRED
+  let hasImportedData = false;
   try {
     const machineDataRes = await fetch('/api/user/machine-data');
-    if (!machineDataRes.ok || machineDataRes.status === 404) {
-      // No data imported yet - show message to import first
-      body.innerHTML = `
-        <div class="alert alert-info mb-0">
-          <h6 class="fw-semibold mb-2">Import Your Data First</h6>
-          <p class="mb-3">To get Mac recommendations, you need to import your Windows machine data first.</p>
-          <button class="btn btn-primary" onclick="document.getElementById('fileImportMain').click(); bootstrap.Modal.getInstance(document.getElementById('suggestedMacModal')).hide();">
-            📁 Import Data Now
-          </button>
-        </div>
-      `;
-      modal.show();
-      return;
+    if (machineDataRes.ok && machineDataRes.status !== 404) {
+      const data = await machineDataRes.json();
+      if (data && data.machineInfo && data.machineInfo.computerName && 
+          !data.machineInfo.computerName.includes('Azure') && 
+          !data.machineInfo.computerName.includes('N/A')) {
+        hasImportedData = true;
+      }
     }
   } catch (error) {
-    // If check fails, still try to show recommendations (might work with WMI data)
     console.log('Could not check for imported data:', error);
   }
 
-  // User has imported data - proceed with recommendations
+  if (!hasImportedData) {
+    // No data imported yet - show message to import first
+    body.innerHTML = `
+      <div class="alert alert-info mb-0">
+        <h6 class="fw-semibold mb-2">Import Your Data First</h6>
+        <p class="mb-3">To get Mac recommendations based on your Windows PC, you need to import your machine data first.</p>
+        <button class="btn btn-primary" onclick="document.getElementById('fileImportMain').click(); bootstrap.Modal.getInstance(document.getElementById('suggestedMacModal')).hide();">
+          📁 Import Data Now
+        </button>
+      </div>
+    `;
+    modal.show();
+    return;
+  }
+
+  // User has imported data - proceed with recommendations using imported data
   const savedYears = Number(localStorage.getItem('tcoYears') || '3');
   const savedWinPrice = localStorage.getItem('tcoWinPrice') || '';
 
   setYears((savedYears === 5) ? 5 : 3);
   winPriceInput.value = savedWinPrice;
 
-  body.innerHTML = '<div class="text-muted">Looking up a match…</div>';
+  body.innerHTML = '<div class="text-muted">Looking up a match based on your imported data…</div>';
   modal.show();
   try { 
     await loadTco(); 
