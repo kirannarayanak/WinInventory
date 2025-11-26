@@ -49,6 +49,9 @@ artifacts/
 appsettings.Development.json
 *.secrets.json
 
+# User data files (contains sensitive user information)
+wwwroot/data/user-machine-data.json
+
 # OS files
 .DS_Store
 Thumbs.db
