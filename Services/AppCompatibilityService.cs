@@ -301,13 +301,74 @@ public class AppCompatibilityService
             return true;
         }
         
+        // Skip Visual C++ Redistributables
+        if (appLower.Contains("visual c++") && (appLower.Contains("redistributable") || appLower.Contains("runtime")))
+        {
+            return true;
+        }
+        
+        // Skip SQL Server components (drivers, native clients, management objects, etc.)
+        if (appLower.Contains("sql server") && (
+            appLower.Contains("native client") ||
+            appLower.Contains("command line") ||
+            appLower.Contains("management objects") ||
+            appLower.Contains("system clr") ||
+            appLower.Contains("odbc driver") ||
+            appLower.Contains("driver") ||
+            appLower.Contains("client")))
+        {
+            return true;
+        }
+        
+        // Skip ODBC drivers
+        if (appLower.Contains("odbc driver") || appLower.Contains("odbc driver"))
+        {
+            return true;
+        }
+        
+        // Skip Build Tools
+        if (appLower.Contains("build tools") && appLower.Contains("microsoft"))
+        {
+            return true;
+        }
+        
+        // Skip ASP.NET components and IIS modules
+        if (appLower.Contains("asp.net") && (
+            appLower.Contains("compilation") ||
+            appLower.Contains("core module") ||
+            appLower.Contains("mvc") ||
+            appLower.Contains("web pages")))
+        {
+            return true;
+        }
+        
+        // Skip IIS modules and extensions
+        if (appLower.Contains("iis") || 
+            appLower.Contains("application request routing") ||
+            appLower.Contains("external cache") ||
+            appLower.Contains("url rewrite") ||
+            appLower.Contains("windows cache extension"))
+        {
+            return true;
+        }
+        
+        // Skip Azure development tools
+        if (appLower.Contains("azure powershell") || 
+            appLower.Contains("azure sdk"))
+        {
+            return true;
+        }
+        
         // Skip other development frameworks and tools
         if (appLower.Contains("clickonce") ||
             appLower.Contains("kudu") ||
             appLower.Contains("iisnode") ||
-            appLower.Contains("url rewrite") ||
             appLower.Contains("mercurial") && appLower.Contains("x86") ||
-            (appLower.Contains("active directory") && appLower.Contains("library")))
+            (appLower.Contains("active directory") && appLower.Contains("library")) ||
+            appLower.Contains("remote tools for visual studio") ||
+            appLower.Contains("network monitor") ||
+            appLower.Contains("hive odbc driver") ||
+            appLower.Contains("web deploy"))
         {
             return true;
         }
