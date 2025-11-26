@@ -162,6 +162,94 @@ h1, h2, h3, h4, h5, h6 {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Tab content sections - better padding and alignment */
+.tab-pane {
+    padding: 1.5rem 0;
+}
+
+.tab-pane > div {
+    padding: 0.5rem 0;
+}
+
+/* Cards in modal sections - consistent spacing */
+.modal-body .card {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+}
+
+.modal-body .card-body {
+    padding: 1.25rem;
+}
+
+.modal-body .card:last-child {
+    margin-bottom: 0;
+}
+
+/* TCO cards in modal - better spacing */
+.modal-body .tco-card {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+}
+
+.modal-body .row {
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+}
+
+.modal-body .row > * {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+/* Savings highlight - better spacing */
+.modal-body .savings-highlight {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+}
+
+/* Tiers cards - better alignment */
+.modal-body .card.h-100 {
+    margin-bottom: 1.5rem;
+}
+
+.modal-body .card-header {
+    padding: 1rem 1.25rem;
+}
+
+/* Compatibility table - better spacing */
+.modal-body .table {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.modal-body .table thead th {
+    padding: 1rem;
+}
+
+.modal-body .table tbody td {
+    padding: 0.875rem 1rem;
+}
+
+/* Insights and advantages sections */
+.modal-body h6.fw-semibold {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-body .advantages-list {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.modal-body .recommendations {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem;
+}
+
 /* Badge Styling */
 .badge {
     border-radius: 12px;
@@ -471,6 +559,12 @@ h1, h2, h3, h4, h5, h6 {
 
 #themeToggle:hover .theme-icon {
     transform: rotate(15deg);
+}
+
+/* Fix white boxes in dark mode */
+[data-theme="dark"] .bg-white {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
 }
 
 /* Dark mode specific adjustments */
