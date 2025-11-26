@@ -1,0 +1,212 @@
+@page
+@model WinInventory.Pages.AdminModel
+@{
+    ViewData["Title"] = "Admin - User Data";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">User Sign-In Data</h2>
+            <p class="text-muted">View all users who signed in and their Windows machine information.</p>
+            
+            <div id="loading" class="text-center my-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading user data...</p>
+            </div>
+            
+            <div id="error" class="alert alert-danger d-none"></div>
+            
+            <div id="userData" class="d-none">
+                <div class="mb-3">
+                    <strong>Total Users: <span id="totalUsers">0</span></strong>
+                </div>
+                
+                <div id="usersList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .user-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px var(--shadow);
+    }
+    
+    .user-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .user-info h5 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+    
+    .provider-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .provider-google {
+        background: #4285f4;
+        color: white;
+    }
+    
+    .provider-microsoft {
+        background: #00a4ef;
+        color: white;
+    }
+    
+    .machine-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .detail-item {
+        padding: 0.5rem;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+    }
+    
+    .detail-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+    
+    .detail-value {
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .apps-count {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const response = await fetch('/api/admin/all-users');
+        
+        if (!response.ok) {
+            throw new Error('Failed to load user data');
+        }
+        
+        const data = await response.json();
+        
+        document.getElementById('loading').classList.add('d-none');
+        
+        if (data.totalUsers === 0) {
+            document.getElementById('userData').innerHTML = 
+                '<div class="alert alert-info">No users have signed in yet.</div>';
+            document.getElementById('userData').classList.remove('d-none');
+            return;
+        }
+        
+        document.getElementById('totalUsers').textContent = data.totalUsers;
+        document.getElementById('userData').classList.remove('d-none');
+        
+        const usersList = document.getElementById('usersList');
+        usersList.innerHTML = '';
+        
+        data.users.forEach((user, index) => {
+            const userCard = document.createElement('div');
+            userCard.className = 'user-card';
+            
+            const providerClass = user.provider.toLowerCase() === 'google' ? 'provider-google' : 'provider-microsoft';
+            
+            userCard.innerHTML = `
+                <div class="user-header">
+                    <div class="user-info">
+                        <h5>${escapeHtml(user.name || user.email || 'Unknown User')}</h5>
+                        <div class="text-muted small">
+                            <span>${escapeHtml(user.email)}</span>
+                            <span class="mx-2">•</span>
+                            <span>Signed in: ${new Date(user.signInTime).toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <span class="provider-badge ${providerClass}">${escapeHtml(user.provider)}</span>
+                </div>
+                
+                <div class="machine-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Computer Name</div>
+                        <div class="detail-value">${escapeHtml(user.machineInfo.computerName || 'N/A')}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Manufacturer</div>
+                        <div class="detail-value">${escapeHtml(user.machineInfo.manufacturer || 'N/A')}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Model</div>
+                        <div class="detail-value">${escapeHtml(user.machineInfo.model || 'N/A')}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Processor</div>
+                        <div class="detail-value">${escapeHtml(user.machineInfo.processor || 'N/A')}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Memory</div>
+                        <div class="detail-value">${escapeHtml(user.machineInfo.totalMemoryGB || 'N/A')} GB</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">OS</div>
+                        <div class="detail-value">${escapeHtml(user.machineInfo.osName || 'N/A')}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">OS Version</div>
+                        <div class="detail-value">${escapeHtml(user.machineInfo.osVersion || 'N/A')}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">User ID</div>
+                        <div class="detail-value small text-muted">${escapeHtml(user.userId.substring(0, 20))}...</div>
+                    </div>
+                </div>
+                
+                <div class="apps-count">
+                    <strong>Installed Applications: ${user.applicationCount}</strong>
+                </div>
+            `;
+            
+            usersList.appendChild(userCard);
+        });
+        
+    } catch (error) {
+        document.getElementById('loading').classList.add('d-none');
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = 'Error loading user data: ' + error.message;
+        errorDiv.classList.remove('d-none');
+    }
+});
+
+function escapeHtml(text) {
+    if (!text) return 'N/A';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+
