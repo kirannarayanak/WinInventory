@@ -1218,8 +1218,25 @@ async function loadTiers() {
 // Update tabs when switching
 document.querySelectorAll('#recommendationTabs button').forEach(btn => {
   btn.addEventListener('shown.bs.tab', async (e) => {
-    if (e.target.id === 'tiers-tab') await loadTiers();
-    if (e.target.id === 'compatibility-tab' || e.target.id === 'insights-tab' || e.target.id === 'advantages-tab') await loadEnhanced();
+    // When switching tabs, check for imported data first
+    if (e.target.id === 'tiers-tab') {
+      const hasData = await checkHasImportedData();
+      if (!hasData) {
+        showImportPrompt(tiersBody);
+      } else {
+        await loadTiers();
+      }
+    }
+    if (e.target.id === 'compatibility-tab' || e.target.id === 'insights-tab' || e.target.id === 'advantages-tab') {
+      const hasData = await checkHasImportedData();
+      if (!hasData) {
+        showImportPrompt(compatibilityBody);
+        showImportPrompt(insightsBody);
+        showImportPrompt(advantagesBody);
+      } else {
+        await loadEnhanced();
+      }
+    }
   });
 });
 
