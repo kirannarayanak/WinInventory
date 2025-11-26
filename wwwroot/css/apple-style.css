@@ -1017,13 +1017,23 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 4px 16px var(--shadow) !important;
 }
 
-/* Footer Styling */
+/* Footer Styling - Classic and Compact */
 .footer {
     background: var(--bg-primary) !important;
     border-top-color: var(--border-color) !important;
     color: var(--text-secondary) !important;
-    padding: 1.5rem 0 !important;
-    margin-top: 3rem !important;
+    padding: 0.75rem 0 !important;
+    margin-top: 2rem !important;
+    font-size: 0.875rem;
+}
+
+.footer .container {
+    max-width: 100%;
+}
+
+.footer small {
+    color: var(--text-secondary) !important;
+    font-size: 0.875rem;
 }
 
 .footer a {
@@ -1034,12 +1044,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .footer a:hover {
     color: var(--text-primary) !important;
+    text-decoration: underline;
 }
 
 /* Ensure main content has enough bottom padding to avoid footer collision */
 main {
-    padding-bottom: 4rem !important;
-    margin-bottom: 2rem !important;
+    padding-bottom: 2rem !important;
+    margin-bottom: 1rem !important;
 }
 
 /* Responsive */
@@ -1053,12 +1064,13 @@ main {
     }
     
     .footer {
-        padding: 1rem 0 !important;
-        margin-top: 2rem !important;
+        padding: 0.5rem 0 !important;
+        margin-top: 1.5rem !important;
+        font-size: 0.8rem;
     }
     
     main {
-        padding-bottom: 3rem !important;
+        padding-bottom: 1.5rem !important;
     }
 }
 
