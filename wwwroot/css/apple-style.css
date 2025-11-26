@@ -164,11 +164,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Tab content sections - better padding and alignment */
 .tab-pane {
-    padding: 1.5rem 0;
+    padding: 1.5rem 0.5rem;
 }
 
 .tab-pane > div {
-    padding: 0.5rem 0;
+    padding: 0.5rem;
 }
 
 /* Cards in modal sections - consistent spacing */
@@ -235,8 +235,17 @@ h1, h2, h3, h4, h5, h6 {
 .modal-body h6.fw-semibold {
     margin-top: 1.5rem;
     margin-bottom: 1rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border-color);
+}
+
+/* Mac Advantages section wrapper */
+.modal-body > div.mt-4 {
+    padding: 0 0.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .modal-body .advantages-list {
@@ -272,10 +281,11 @@ h1, h2, h3, h4, h5, h6 {
 /* TCO Comparison Cards */
 .tco-card {
     border-radius: 16px;
-    padding: 1.5rem;
+    padding: 1.75rem;
     background: var(--apple-gray-1);
     border: 1px solid var(--apple-gray-2);
     transition: all 0.3s ease;
+    margin: 0.5rem;
 }
 
 .tco-card.mac-card {
@@ -292,10 +302,10 @@ h1, h2, h3, h4, h5, h6 {
 .savings-highlight {
     background: linear-gradient(135deg, var(--apple-green) 0%, #28cd41 100%);
     color: white;
-    padding: 1.5rem;
+    padding: 2rem 1.75rem;
     border-radius: 16px;
     text-align: center;
-    margin-top: 1.5rem;
+    margin: 1.5rem 0.5rem;
     box-shadow: 0 4px 16px rgba(48, 209, 88, 0.3);
 }
 
@@ -315,8 +325,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Advantages List */
 .advantages-list {
     list-style: none;
-    padding: 0;
-    margin: 1.5rem 0;
+    padding: 0 0.5rem;
+    margin: 1.5rem 0.5rem;
 }
 
 .advantages-list li {
@@ -340,9 +350,9 @@ h1, h2, h3, h4, h5, h6 {
 .recommendations {
     background: rgba(0, 113, 227, 0.05);
     border-left: 4px solid var(--apple-blue);
-    padding: 1rem 1.5rem;
+    padding: 1.5rem 1.75rem;
     border-radius: 12px;
-    margin-top: 1.5rem;
+    margin: 1.5rem 0.5rem;
 }
 
 .recommendations h6 {
