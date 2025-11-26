@@ -200,7 +200,22 @@ app.MapPost("/api/user/save-machine-data", async (HttpContext ctx, UserDataServi
                 ctx.User.FindFirst("preferred_username")?.Value ?? "";
     var name = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? 
                ctx.User.FindFirst("name")?.Value ?? "";
-    var provider = ctx.User.Identity.AuthenticationType ?? "Unknown";
+    // Determine provider from authentication type or claims
+    var provider = "Unknown";
+    if (ctx.User.Identity.AuthenticationType?.Contains("Google", StringComparison.OrdinalIgnoreCase) == true)
+        provider = "Google";
+    else if (ctx.User.Identity.AuthenticationType?.Contains("Microsoft", StringComparison.OrdinalIgnoreCase) == true)
+        provider = "Microsoft";
+    else
+    {
+        // Try to get from claims
+        var idp = ctx.User.FindFirst("http://schemas.microsoft.com/identity/claims/identityprovider")?.Value ??
+                  ctx.User.FindFirst(System.Security.Claims.ClaimTypes.AuthenticationMethod)?.Value;
+        if (idp?.Contains("google", StringComparison.OrdinalIgnoreCase) == true)
+            provider = "Google";
+        else if (idp?.Contains("microsoft", StringComparison.OrdinalIgnoreCase) == true)
+            provider = "Microsoft";
+    }
 
     // Get machine info
     var machineInfo = inventoryService.GetMachineInfo();
@@ -234,6 +249,35 @@ app.MapGet("/api/user/machine-data", (HttpContext ctx, UserDataService userDataS
 
     return Results.Ok(data);
 }).RequireAuthorization();
+
+// Admin endpoint to view all stored user data (for viewing who signed in and their machines)
+app.MapGet("/api/admin/all-users", (UserDataService userDataService) =>
+{
+    var allData = userDataService.GetAllUserData();
+    return Results.Ok(new 
+    { 
+        totalUsers = allData.Count,
+        users = allData.Select(u => new
+        {
+            userId = u.UserId,
+            email = u.UserEmail,
+            name = u.UserName,
+            provider = u.Provider,
+            signInTime = u.SignInTime,
+            machineInfo = new
+            {
+                computerName = u.MachineInfo.ComputerName,
+                manufacturer = u.MachineInfo.Manufacturer,
+                model = u.MachineInfo.Model,
+                processor = u.MachineInfo.Processor,
+                totalMemoryGB = u.MachineInfo.TotalMemoryGB,
+                osName = u.MachineInfo.OSName,
+                osVersion = u.MachineInfo.OSVersion
+            },
+            applicationCount = u.InstalledApplications.Count
+        })
+    });
+});
  
 app.MapGet("/export/apps.csv", (InventoryService svc) =>
 
@@ -360,9 +404,22 @@ app.MapPost("/api/import/recommend", async (HttpRequest req, HttpContext ctx, Us
             var name = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? 
                       ctx.User.FindFirst("name")?.Value ?? 
                       email;
-            var provider = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.AuthenticationMethod)?.Value ?? 
-                         ctx.User.FindFirst("http://schemas.microsoft.com/identity/claims/identityprovider")?.Value ?? 
-                         "Unknown";
+            // Determine provider from authentication type or claims
+            var provider = "Unknown";
+            var authType = ctx.User.Identity?.AuthenticationType ?? "";
+            if (authType.Contains("Google", StringComparison.OrdinalIgnoreCase))
+                provider = "Google";
+            else if (authType.Contains("Microsoft", StringComparison.OrdinalIgnoreCase))
+                provider = "Microsoft";
+            else
+            {
+                var idp = ctx.User.FindFirst("http://schemas.microsoft.com/identity/claims/identityprovider")?.Value ??
+                          ctx.User.FindFirst(System.Security.Claims.ClaimTypes.AuthenticationMethod)?.Value;
+                if (idp?.Contains("google", StringComparison.OrdinalIgnoreCase) == true)
+                    provider = "Google";
+                else if (idp?.Contains("microsoft", StringComparison.OrdinalIgnoreCase) == true)
+                    provider = "Microsoft";
+            }
             
             userDataService.SaveUserMachineData(userId, email, name, provider, machine, apps);
         }
