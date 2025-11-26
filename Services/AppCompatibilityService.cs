@@ -96,8 +96,22 @@ public class AppCompatibilityService
             
             if (!matched)
             {
+                // Skip .NET Framework components and other Windows-only development tools early
+                if (appLower.Contains(".net framework") || appLower.Contains("targeting pack") || 
+                    appLower.Contains("multi-targeting") || appLower.Contains("bootstrapper") ||
+                    (appLower.Contains("microsoft") && (appLower.Contains("framework") || appLower.Contains("sdk")) && 
+                     !appLower.Contains("office") && !appLower.Contains("teams") && !appLower.Contains("edge")))
+                {
+                    results.Add(new AppCompatibility
+                    {
+                        AppName = appName,
+                        Type = CompatibilityType.WebSaaS,
+                        CompatibilityScore = 0.95,
+                        Notes = "Development framework component - .NET Core/.NET 5+ runs natively on macOS. This Windows component not needed."
+                    });
+                }
                 // Better detection for Microsoft apps - check VS Code FIRST
-                if (appLower.Contains("microsoft") || appLower.Contains("ms "))
+                else if (appLower.Contains("microsoft") || appLower.Contains("ms "))
                 {
                     // Check Visual Studio Code FIRST (before Office, before generic Visual Studio)
                     if (appLower.Contains("visual studio code") || appLower.Contains("vscode") || 
@@ -195,8 +209,20 @@ public class AppCompatibilityService
                         Notes = "Fully native macOS app - optimal performance"
                     });
                 }
-                else if (appLower.Contains("windows") || (appLower.Contains(".net sdk") && !appLower.Contains("mac")) || 
-                         (appLower.Contains("sdk") && appLower.Contains("windows")))
+                // .NET Framework components - these are development tools, not apps that need to run on Mac
+                else if (appLower.Contains(".net framework") || appLower.Contains("microsoft .net") || 
+                         appLower.Contains("targeting pack") || appLower.Contains("multi-targeting") ||
+                         (appLower.Contains("sdk") && appLower.Contains(".net") && !appLower.Contains("core") && !appLower.Contains("5") && !appLower.Contains("6") && !appLower.Contains("7") && !appLower.Contains("8")))
+                {
+                    results.Add(new AppCompatibility
+                    {
+                        AppName = appName,
+                        Type = CompatibilityType.WebSaaS, // Mark as WebSaaS since .NET Core/5+ runs natively on Mac
+                        CompatibilityScore = 0.95,
+                        Notes = "Development framework - .NET Core/.NET 5+ runs natively on macOS. This Windows component not needed."
+                    });
+                }
+                else if (appLower.Contains("windows") && !appLower.Contains("update") && !appLower.Contains("sdk"))
                 {
                     results.Add(new AppCompatibility
                     {
