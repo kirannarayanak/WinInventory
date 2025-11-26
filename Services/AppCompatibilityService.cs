@@ -103,8 +103,14 @@ public class AppCompatibilityService
             
             if (!matched)
             {
+                // Skip .NET Framework components and other Windows-only development tools early
+                if (IsFrameworkOrDevelopmentTool(appLower))
+                {
+                    // Skip frameworks - don't add to results
+                    continue;
+                }
                 // Better detection for Microsoft apps - check VS Code FIRST
-                else if (appLower.Contains("microsoft") || appLower.Contains("ms "))
+                if (appLower.Contains("microsoft") || appLower.Contains("ms "))
                 {
                     // Check Visual Studio Code FIRST (before Office, before generic Visual Studio)
                     if (appLower.Contains("visual studio code") || appLower.Contains("vscode") || 
