@@ -420,9 +420,48 @@ function setYears(y){
 function fmt(n){ return (typeof n === 'number') ? n.toLocaleString(undefined, { maximumFractionDigits: 0 }) : n; }
 function esc(s){ return (s||'').replace(/[&<>\"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
  
+// Helper function to check if user has imported valid data
+async function checkHasImportedData() {
+  try {
+    const machineDataRes = await fetch('/api/user/machine-data');
+    if (machineDataRes.ok && machineDataRes.status !== 404) {
+      const data = await machineDataRes.json();
+      if (data && data.machineInfo && data.machineInfo.computerName && 
+          !data.machineInfo.computerName.includes('Azure') && 
+          !data.machineInfo.computerName.includes('N/A')) {
+        return true;
+      }
+    }
+  } catch (error) {
+    console.log('Could not check for imported data:', error);
+  }
+  return false;
+}
+
+// Helper function to show import prompt in any tab
+function showImportPrompt(targetElement) {
+  if (!targetElement) return;
+  targetElement.innerHTML = `
+    <div class="alert alert-info mb-0">
+      <h6 class="fw-semibold mb-2">Import Your Data First</h6>
+      <p class="mb-3">To get Mac recommendations based on your Windows PC, you need to import your machine data first.</p>
+      <button class="btn btn-primary" onclick="document.getElementById('fileImportMain').click(); bootstrap.Modal.getInstance(document.getElementById('suggestedMacModal')).hide();">
+        📁 Import Data Now
+      </button>
+    </div>
+  `;
+}
+
 async function loadTco() {
   // Check authentication first
   if (!await requireAuth()) {
+    return;
+  }
+
+  // Check if user has imported data
+  const hasData = await checkHasImportedData();
+  if (!hasData) {
+    showImportPrompt(body);
     return;
   }
 
@@ -824,6 +863,15 @@ async function loadEnhanced() {
     return;
   }
 
+  // Check if user has imported data
+  const hasData = await checkHasImportedData();
+  if (!hasData) {
+    showImportPrompt(compatibilityBody);
+    showImportPrompt(insightsBody);
+    showImportPrompt(advantagesBody);
+    return;
+  }
+
   const price = Number(winPriceInput.value);
   const qs = new URLSearchParams();
   qs.set('years', String(currentYears));
@@ -1098,6 +1146,13 @@ function updateMacAdvantages(data) {
 async function loadTiers() {
   // Check authentication first
   if (!await requireAuth()) {
+    return;
+  }
+
+  // Check if user has imported data
+  const hasData = await checkHasImportedData();
+  if (!hasData) {
+    showImportPrompt(tiersBody);
     return;
   }
 
