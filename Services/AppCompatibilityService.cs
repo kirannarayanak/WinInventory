@@ -60,6 +60,13 @@ public class AppCompatibilityService
         foreach (var appName in appNames)
         {
             var appLower = appName.ToLowerInvariant();
+            
+            // Skip frameworks and development tools - only show actual applications
+            if (IsFrameworkOrDevelopmentTool(appLower))
+            {
+                continue; // Skip this item entirely
+            }
+            
             var matched = false;
             
             // Try exact matches first, then partial matches
@@ -96,20 +103,6 @@ public class AppCompatibilityService
             
             if (!matched)
             {
-                // Skip .NET Framework components and other Windows-only development tools early
-                if (appLower.Contains(".net framework") || appLower.Contains("targeting pack") || 
-                    appLower.Contains("multi-targeting") || appLower.Contains("bootstrapper") ||
-                    (appLower.Contains("microsoft") && (appLower.Contains("framework") || appLower.Contains("sdk")) && 
-                     !appLower.Contains("office") && !appLower.Contains("teams") && !appLower.Contains("edge")))
-                {
-                    results.Add(new AppCompatibility
-                    {
-                        AppName = appName,
-                        Type = CompatibilityType.WebSaaS,
-                        CompatibilityScore = 0.95,
-                        Notes = "Development framework component - .NET Core/.NET 5+ runs natively on macOS. This Windows component not needed."
-                    });
-                }
                 // Better detection for Microsoft apps - check VS Code FIRST
                 else if (appLower.Contains("microsoft") || appLower.Contains("ms "))
                 {
@@ -209,19 +202,6 @@ public class AppCompatibilityService
                         Notes = "Fully native macOS app - optimal performance"
                     });
                 }
-                // .NET Framework components - these are development tools, not apps that need to run on Mac
-                else if (appLower.Contains(".net framework") || appLower.Contains("microsoft .net") || 
-                         appLower.Contains("targeting pack") || appLower.Contains("multi-targeting") ||
-                         (appLower.Contains("sdk") && appLower.Contains(".net") && !appLower.Contains("core") && !appLower.Contains("5") && !appLower.Contains("6") && !appLower.Contains("7") && !appLower.Contains("8")))
-                {
-                    results.Add(new AppCompatibility
-                    {
-                        AppName = appName,
-                        Type = CompatibilityType.WebSaaS, // Mark as WebSaaS since .NET Core/5+ runs natively on Mac
-                        CompatibilityScore = 0.95,
-                        Notes = "Development framework - .NET Core/.NET 5+ runs natively on macOS. This Windows component not needed."
-                    });
-                }
                 else if (appLower.Contains("windows") && !appLower.Contains("update") && !appLower.Contains("sdk"))
                 {
                     results.Add(new AppCompatibility
@@ -299,6 +279,43 @@ public class AppCompatibilityService
     {
         if (compatibilities.Count == 0) return 1.0;
         return compatibilities.Average(c => c.CompatibilityScore);
+    }
+
+    private bool IsFrameworkOrDevelopmentTool(string appLower)
+    {
+        // Skip .NET Framework components
+        if (appLower.Contains(".net framework") || 
+            appLower.Contains("targeting pack") || 
+            appLower.Contains("multi-targeting") || 
+            appLower.Contains("bootstrapper") ||
+            (appLower.Contains("microsoft .net") && !appLower.Contains("office")) ||
+            (appLower.Contains("sdk") && appLower.Contains(".net") && !appLower.Contains("core") && 
+             !appLower.Contains("5") && !appLower.Contains("6") && !appLower.Contains("7") && !appLower.Contains("8")))
+        {
+            return true;
+        }
+        
+        // Skip other development frameworks and tools
+        if (appLower.Contains("clickonce") ||
+            appLower.Contains("kudu") ||
+            appLower.Contains("iisnode") ||
+            appLower.Contains("url rewrite") ||
+            appLower.Contains("mercurial") && appLower.Contains("x86") ||
+            (appLower.Contains("active directory") && appLower.Contains("library")))
+        {
+            return true;
+        }
+        
+        // Skip Windows Update and system components
+        if (appLower.Contains("update health") ||
+            appLower.Contains("health tools") ||
+            appLower.Contains("system component") ||
+            (appLower.Contains("microsoft") && appLower.Contains("framework") && !appLower.Contains("office")))
+        {
+            return true;
+        }
+        
+        return false;
     }
 }
 
