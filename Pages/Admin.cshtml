@@ -10,6 +10,12 @@
             <h2 class="mb-4">User Sign-In Data</h2>
             <p class="text-muted">View all users who signed in and their Windows machine information.</p>
             
+            <div id="notSignedIn" class="alert alert-warning d-none">
+                <h5>Authentication Required</h5>
+                <p>You must be signed in to view this page.</p>
+                <a href="/Login" class="btn btn-primary">Sign In</a>
+            </div>
+            
             <div id="loading" class="text-center my-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
@@ -108,6 +114,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', async function() {
+    // First check if user is authenticated
+    const authCheck = await fetch('/api/auth/check');
+    const authData = await authCheck.json();
+    
+    if (!authData.isAuthenticated) {
+        document.getElementById('loading').classList.add('d-none');
+        document.getElementById('notSignedIn').classList.remove('d-none');
+        return;
+    }
+    
     try {
         const response = await fetch('/api/admin/all-users');
         

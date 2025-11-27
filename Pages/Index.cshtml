@@ -337,6 +337,10 @@ async function updateAuthUI() {
       // Show Mac suggestion features when signed in
       if (btnSuggestedMac) btnSuggestedMac.style.display = 'block';
       
+      // Show Admin link when signed in
+      const adminNavItem = document.getElementById('adminNavItem');
+      if (adminNavItem) adminNavItem.style.display = 'block';
+      
       // Show export/import section when signed in
       if (instructionsSection) instructionsSection.style.display = 'none';
       if (exportImportSection) exportImportSection.style.display = 'block';
@@ -355,6 +359,8 @@ async function updateAuthUI() {
       // If check fails, hide auth section (OAuth not configured)
       if (authSection) authSection.style.display = 'none';
       if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
+      const adminNavItem = document.getElementById('adminNavItem');
+      if (adminNavItem) adminNavItem.style.display = 'none';
       if (instructionsSection) instructionsSection.style.display = 'block';
       if (exportImportSection) exportImportSection.style.display = 'none';
     }
@@ -362,6 +368,8 @@ async function updateAuthUI() {
     // If check fails, hide auth section (OAuth not configured)
     if (authSection) authSection.style.display = 'none';
     if (btnSuggestedMac) btnSuggestedMac.style.display = 'none';
+    const adminNavItem = document.getElementById('adminNavItem');
+    if (adminNavItem) adminNavItem.style.display = 'none';
     if (instructionsSection) instructionsSection.style.display = 'block';
     if (exportImportSection) exportImportSection.style.display = 'none';
   }
