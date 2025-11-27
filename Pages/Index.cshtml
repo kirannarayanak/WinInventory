@@ -312,7 +312,7 @@ async function updateAuthUI() {
     const testRes = await fetch('/api/auth/check');
     if (testRes.ok) {
       const data = await testRes.json();
-      const isAuthenticated = data.authenticated === true;
+      const isAuthenticated = data.isAuthenticated === true || data.authenticated === true;
       
       // Hide auth section if not authenticated (OAuth not configured)
       if (!isAuthenticated) {
