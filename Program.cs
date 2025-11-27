@@ -165,7 +165,7 @@ app.MapGet("/api/machineinfo", (InventoryService svc) => Results.Ok(svc.GetMachi
 app.MapGet("/api/apps",        (InventoryService svc) => Results.Ok(svc.GetInstalledApplications()));
 
 // Auth check endpoint
-app.MapGet("/api/auth/check", (HttpContext ctx) => 
+app.MapGet("/api/auth/check", (HttpContext ctx, AdminService adminService) =>
 {
     var isAuthenticated = ctx.User.Identity?.IsAuthenticated ?? false;
     if (isAuthenticated)
@@ -176,15 +176,18 @@ app.MapGet("/api/auth/check", (HttpContext ctx) =>
         var name = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? 
                    ctx.User.FindFirst("name")?.Value ?? "";
         var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        var isAdmin = adminService.IsAdmin(email);
         
         return Results.Ok(new { 
             authenticated = true,
+            isAuthenticated = true,
             email = email,
             name = name,
-            userId = userId
+            userId = userId,
+            isAdmin = isAdmin
         });
     }
-    return Results.Ok(new { authenticated = false });
+    return Results.Ok(new { authenticated = false, isAuthenticated = false, isAdmin = false });
 });
 
 // Save user machine data endpoint (requires auth)
