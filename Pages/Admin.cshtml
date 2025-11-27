@@ -128,6 +128,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         const response = await fetch('/api/admin/all-users');
         
         if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('notSignedIn').classList.remove('d-none');
+                return;
+            }
             throw new Error('Failed to load user data');
         }
         
