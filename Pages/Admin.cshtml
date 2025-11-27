@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const authCheck = await fetch('/api/auth/check');
     const authData = await authCheck.json();
     
-    if (!authData.isAuthenticated) {
+    if (!authData.isAuthenticated && !authData.authenticated) {
         document.getElementById('loading').classList.add('d-none');
         document.getElementById('notSignedIn').classList.remove('d-none');
         return;
