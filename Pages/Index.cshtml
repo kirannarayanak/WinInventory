@@ -337,9 +337,13 @@ async function updateAuthUI() {
       // Show Mac suggestion features when signed in
       if (btnSuggestedMac) btnSuggestedMac.style.display = 'block';
       
-      // Show Admin link when signed in
+      // Show Admin link only if user is admin
       const adminNavItem = document.getElementById('adminNavItem');
-      if (adminNavItem) adminNavItem.style.display = 'block';
+      if (adminNavItem && data.isAdmin) {
+        adminNavItem.style.display = 'block';
+      } else if (adminNavItem) {
+        adminNavItem.style.display = 'none';
+      }
       
       // Show export/import section when signed in
       if (instructionsSection) instructionsSection.style.display = 'none';

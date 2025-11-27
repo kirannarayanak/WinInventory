@@ -108,6 +108,7 @@ builder.Services.AddSingleton<CarbonFootprintService>();
 builder.Services.AddSingleton<EnhancedRecommendationService>();
 
 builder.Services.AddSingleton<UserDataService>();
+builder.Services.AddSingleton<AdminService>();
 
 // Configure forwarded headers for HTTPS detection (needed for cloud deployments like Render)
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -251,8 +252,23 @@ app.MapGet("/api/user/machine-data", (HttpContext ctx, UserDataService userDataS
 }).RequireAuthorization();
 
 // Admin endpoint to view all stored user data (for viewing who signed in and their machines)
-app.MapGet("/api/admin/all-users", (UserDataService userDataService) =>
+app.MapGet("/api/admin/all-users", (HttpContext ctx, UserDataService userDataService, AdminService adminService) =>
 {
+    if (!ctx.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+    
+    // Check if user is admin
+    var email = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? 
+                ctx.User.FindFirst("email")?.Value ?? 
+                ctx.User.FindFirst("preferred_username")?.Value ?? "";
+    
+    if (!adminService.IsAdmin(email))
+    {
+        return Results.Forbid();
+    }
+    
     var allData = userDataService.GetAllUserData();
     return Results.Ok(new 
     { 

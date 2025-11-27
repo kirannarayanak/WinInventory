@@ -16,6 +16,13 @@
                 <a href="/Login" class="btn btn-primary">Sign In</a>
             </div>
             
+            <div id="notAdmin" class="alert alert-danger d-none">
+                <h5>Access Denied</h5>
+                <p>You do not have admin privileges to access this page.</p>
+                <p class="small text-muted">Only authorized admin users can view this page.</p>
+                <a href="/" class="btn btn-secondary">Go to Home</a>
+            </div>
+            
             <div id="loading" class="text-center my-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
@@ -124,13 +131,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
     
+    if (!authData.isAdmin) {
+        document.getElementById('loading').classList.add('d-none');
+        document.getElementById('notAdmin').classList.remove('d-none');
+        return;
+    }
+    
     try {
         const response = await fetch('/api/admin/all-users');
         
         if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
+            if (response.status === 401) {
                 document.getElementById('loading').classList.add('d-none');
                 document.getElementById('notSignedIn').classList.remove('d-none');
+                return;
+            }
+            if (response.status === 403) {
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('notAdmin').classList.remove('d-none');
                 return;
             }
             throw new Error('Failed to load user data');
